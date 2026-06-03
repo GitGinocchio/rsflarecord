@@ -6,12 +6,12 @@ pub struct Hello;
 
 #[async_trait]
 impl Command for Hello {
-    fn name(&self) -> &'static str {
-        "hello"
+    fn name(&self) -> String {
+        "hello".into()
     }
 
-    fn description(&self) -> &'static str {
-        "Saluta qualcuno nella chat!"
+    fn description(&self) -> String {
+        "Say Hi to someone in chat!".into()
     }
 
     async fn execute(&self, interaction: (), env: worker::Env) -> MaybeCommandResult {

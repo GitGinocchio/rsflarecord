@@ -3,20 +3,20 @@ use worker::Response;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Errore nella verifica della firma crittografica: {0}")]
+    #[error("Error verifing signature: {0}")]
     SignatureVerification(String),
 
-    #[error("Errore nel parsing del JSON di Discord: {0}")]
+    #[error("Error parsing JSON: {0}")]
     JsonParsing(#[from] serde_json::Error),
 
-    #[error("Variabile d'ambiente mancante o invalida: {0}")]
+    #[error("Could not find environment variable: {0}")]
     Environment(#[from] worker::Error),
 
-    #[error("Il comando '{0}' non è stato registrato nel router")]
+    #[error("Command '{0}' is not registered")]
     CommandNotFound(String),
     
-    #[error("Il payload ricevuto non è un'interazione valida")]
-    InvalidInteraction,
+    #[error("The received payload is not a valid Interaction")]
+    InvalidInteraction(),
 }
 
 impl Error {

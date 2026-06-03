@@ -22,8 +22,8 @@ pub type MaybeAutocompleteResult = Option<AutocompleteResult>;
 #[async_trait]
 #[allow(unused)]
 pub trait Command: Send + Sync {
-    fn name(&self) -> &'static str;
-    fn description(&self) -> &'static str;
+    fn name(&self) -> String;
+    fn description(&self) -> String;
 
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
@@ -37,8 +37,8 @@ pub trait Command: Send + Sync {
 #[async_trait]
 #[allow(unused)]
 pub trait Subcommand: Send + Sync {
-    fn name(&self) -> &'static str;
-    fn description(&self) -> &'static str;
+    fn name(&self) -> String;
+    fn description(&self) -> String;
 
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
@@ -49,10 +49,45 @@ pub trait Subcommand: Send + Sync {
 #[async_trait]
 #[allow(unused)]
 pub trait SubcommandGroup: Send + Sync {
-    fn name(&self) -> &'static str;
-    fn description(&self) -> &'static str;
+    fn name(&self) -> String;
+    fn description(&self) -> String;
 
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
+}
+
+use std::future::Future;
+
+pub struct CommandHandler<F, Fut> {
+    pub name: String,
+    pub description: String,
+    pub handler: F,
+    _marker: std::marker::PhantomData<Fut>,
+}
+
+impl<F, Fut> CommandHandler<F, Fut> {
+    pub fn new(name: String, description: String, handler: F) -> Self {
+        Self {
+            name,
+            description,
+            handler,
+            _marker: std::marker::PhantomData,
+        }
+    }
+}
+
+#[async_trait]
+impl<F, Fut> Command for CommandHandler<F, Fut> 
+where 
+    F: Fn((), Env) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = MaybeCommandResult> + Send + Sync + 'static,
+{
+    fn name(&self) -> String { self.name.clone() }
+    fn description(&self) -> String { self.description.clone() }
+
+    async fn execute(&self, interaction: (), env: Env) -> MaybeCommandResult {
+        // Eseguiamo la closure che restituisce il Future e lo aspettiamo (await)
+        (self.handler)(interaction, env).await
+    }
 }
