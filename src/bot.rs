@@ -1,8 +1,10 @@
+use twilight_model::application::interaction::Interaction as TwilightInteraction;
 use worker::{Env, Request, Response};
 
 use crate::models::command::{CommandResult, CommandType};
 use crate::error::{Error, Result};
 use crate::crypto;
+use crate::models::interaction::Interaction;
 
 #[allow(unused)]
 pub struct Bot {
@@ -43,6 +45,9 @@ impl Bot {
             return Response::error("Unauthorized", 401).map_err(Error::Environment);
         }
 
-        Response::empty().map_err(Error::Environment)
+        let tw_interaction: TwilightInteraction = serde_json::from_slice(&body)?;
+        let interaction = Interaction::from(tw_interaction);
+
+        interaction.perform(self)
     }
 }
