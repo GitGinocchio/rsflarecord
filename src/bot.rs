@@ -1,6 +1,6 @@
 use worker::{Env, Request, Response};
 
-use crate::models::command::CommandType;
+use crate::models::command::{CommandResult, CommandType};
 use crate::error::{Error, Result};
 use crate::crypto;
 
@@ -19,6 +19,10 @@ impl Bot {
 
     pub fn register_command(&mut self, command: CommandType) -> Result<()> {
         Ok(())
+    }
+
+    pub fn register_command_handler<F>(&mut self, name: impl Into<String>, handler: F) where F: Fn(()) -> CommandResult {
+
     }
 
     pub fn register_commands(&mut self, commands: Vec<CommandType>) -> Result<()> {

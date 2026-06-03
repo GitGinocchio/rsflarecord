@@ -1,4 +1,5 @@
 use thiserror::Error;
+use worker::Response;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -16,6 +17,18 @@ pub enum Error {
     
     #[error("Il payload ricevuto non è un'interazione valida")]
     InvalidInteraction,
+}
+
+impl Error {
+    pub fn as_response(self) -> worker::Result<Response> {
+        Response::empty()
+    }
+}
+
+impl From<Error> for worker::Error {
+    fn from(value: Error) -> Self {
+        Self::from(format!("[rsflarecord] Error: {}", value))
+    }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

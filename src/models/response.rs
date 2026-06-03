@@ -1,4 +1,4 @@
-use twilight_model::channel::message::Embed;
+use twilight_model::{channel::message::Embed, http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType}};
 
 
 
@@ -15,6 +15,17 @@ impl CommandResponse {
             content: None,
             embeds: vec![],
             ephemeral: false
+        }
+    }
+}
+
+impl Into<InteractionResponse> for CommandResponse {
+    fn into(self) -> InteractionResponse {
+        InteractionResponse { 
+            kind: InteractionResponseType::ChannelMessageWithSource, 
+            data: Some(InteractionResponseData {
+                ..Default::default()
+            })
         }
     }
 }

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use twilight_model::guild::Permissions;
 use worker::Env;
 
 use crate::{
@@ -24,6 +25,8 @@ pub trait Command: Send + Sync {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
 
+    fn default_member_permissions(&self) -> Option<Permissions> { None }
+
     async fn execute(&self, interaction: (), env: Env) -> MaybeCommandResult { None }
     async fn autocomplete(&self, interaction: (), env: Env) -> MaybeAutocompleteResult { None }
 
@@ -37,6 +40,8 @@ pub trait Subcommand: Send + Sync {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
 
+    fn default_member_permissions(&self) -> Option<Permissions> { None }
+
     async fn execute(&self, interaction: (), env: Env) -> CommandResult;
     async fn autocomplete(&self, interaction: (), env: Env) -> MaybeAutocompleteResult { None }
 }
@@ -46,6 +51,8 @@ pub trait Subcommand: Send + Sync {
 pub trait SubcommandGroup: Send + Sync {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
+
+    fn default_member_permissions(&self) -> Option<Permissions> { None }
 
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
 }

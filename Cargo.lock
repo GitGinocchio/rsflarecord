@@ -723,6 +723,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "simple"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "rsflarecord",
+ "worker",
+ "worker-macros",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1018,6 +1028,16 @@ checksum = "6d621441cfc37b84979402712047321980c178f299193a3589d05b99e8763436"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "with_commands"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "rsflarecord",
+ "worker",
+ "worker-macros",
 ]
 
 [[package]]
