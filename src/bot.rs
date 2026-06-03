@@ -21,12 +21,12 @@ impl Bot {
         Ok(())
     }
 
-    pub fn register_command_handler<F>(&mut self, name: impl Into<String>, handler: F) where F: Fn(()) -> CommandResult {
-
-    }
-
     pub fn register_commands(&mut self, commands: Vec<CommandType>) -> Result<()> {
         Ok(())
+    }
+
+    pub fn register_command_handler<F>(&mut self, name: impl Into<String>, handler: F) where F: Fn(()) -> CommandResult {
+
     }
 
     pub async fn handle(&self, mut req: Request, env: Env) -> Result<Response> {
