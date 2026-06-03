@@ -1,22 +1,41 @@
+use hex::FromHexError;
 use thiserror::Error;
 use worker::Response;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Error verifing signature: {0}")]
-    SignatureVerification(String),
+    #[error("Header '{0}' not found.")]
+    MissingHeader(String),
 
-    #[error("Error parsing JSON: {0}")]
-    JsonParsing(#[from] serde_json::Error),
+    #[error("Invalid payload: {0}")]
+    InvalidPayload(String),
 
-    #[error("Could not find environment variable: {0}")]
-    Environment(#[from] worker::Error),
+    #[error("Invalid interaction: {0}")]
+    InvalidInteraction(String),
+
+    #[error("Invalid public key or signature format: {0:?}")]
+    CryptoError(#[from] ed25519_dalek::SignatureError),
+
+    #[error("Failed to parse from hex: {0:?}")]
+    ParseHexFailed(#[from] FromHexError),
+
+    #[error("JSON error: {0:?}")]
+    JsonFailed(#[from] serde_json::Error),
+
+    #[error("Worker error: {0}")]
+    WorkerError(#[from] worker::Error),
+
+    #[error("Environment variable '{0}' not found.")]
+    EnvironmentVariableNotFound(String),
 
     #[error("Command '{0}' is not registered")]
     CommandNotFound(String),
-    
-    #[error("The received payload is not a valid Interaction")]
-    InvalidInteraction(),
+
+    #[error("Error communicating with {0}")]
+    UpstreamError(String),
+
+    #[error("Error: {0}")]
+    Generic(String),
 }
 
 impl Error {

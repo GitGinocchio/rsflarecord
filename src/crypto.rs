@@ -5,19 +5,19 @@ use crate::error::{Error, Result};
 
 pub (crate) fn verify_signature(headers: &Headers, body: &[u8], public_key_hex: &str) -> Result<bool> {
     let signature_header = headers.get("X-Signature-Ed25519")?
-        .ok_or_else(|| Error::SignatureVerification("Missing X-Signature-Ed25519 header".into()))?;
+        .ok_or_else(|| Error::MissingHeader("Missing X-Signature-Ed25519 header".into()))?;
 
     let timestamp_header = headers.get("X-Signature-Timestamp")?
-        .ok_or_else(|| Error::SignatureVerification("Missing X-Signature-Timestamp header".into()))?;
+        .ok_or_else(|| Error::MissingHeader("Missing X-Signature-Timestamp header".into()))?;
 
     let public_key_bytes = hex::decode(public_key_hex)
-        .map_err(|e| Error::SignatureVerification(format!("Invalid hex public key: {}", e)))?;
+        .map_err(Error::ParseHexFailed)?;
 
     let verifying_key = VerifyingKey::from_bytes(&public_key_bytes.try_into().unwrap_or([0; 32]))
-        .map_err(|e| Error::SignatureVerification(format!("Invalid Ed25519 public key: {}", e)))?;
+        .map_err(Error::CryptoError)?;
 
     let signature_bytes = hex::decode(signature_header)
-        .map_err(|e| Error::SignatureVerification(format!("Invalid hex signature: {}", e)))?;
+        .map_err(Error::ParseHexFailed)?;
 
     let signature = Signature::from_bytes(&signature_bytes.try_into().unwrap_or([0; 64]));
 

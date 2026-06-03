@@ -3,14 +3,16 @@ use std::collections::HashMap;
 use twilight_model::application::interaction::Interaction as TwilightInteraction;
 use worker::{Env, Request, Response};
 
-use crate::models::command::{CommandHandler, CommandType, MaybeCommandResult};
+use crate::models::command::data::CommandData;
+use crate::models::command::CommandHandler;
+use crate::models::command::{CommandType, MaybeCommandResult};
 use crate::error::{Error, Result};
 use crate::crypto;
 use crate::models::interaction::Interaction;
 
 #[allow(unused)]
 pub struct Bot {
-    commands: HashMap<String, CommandType>
+    pub commands: HashMap<String, CommandType>
 }
 
 #[allow(unused)]
@@ -39,7 +41,7 @@ impl Bot {
         handler: F
     ) -> Result<()> 
     where 
-        F: Fn((), Env) -> Fut + Send + Sync + 'static,
+        F: Fn(Interaction, CommandData, Env) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = MaybeCommandResult> + Send + Sync + 'static,
     {
         let handler = CommandHandler::new(name.into(), description.into(), handler);
@@ -54,18 +56,18 @@ impl Bot {
         let headers = req.headers();
 
         let public_key = env.secret("DISCORD_PUBLIC_KEY")
-            .map_err(Error::Environment)?
+            .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
             .to_string();
     
         let is_valid = crypto::verify_signature(headers, &body, &public_key)?;
 
         if !is_valid {
-            return Response::error("Unauthorized", 401).map_err(Error::Environment);
+            return Response::error("Unauthorized", 401).map_err(Error::WorkerError);
         }
 
         let tw_interaction: TwilightInteraction = serde_json::from_slice(&body)?;
         let interaction = Interaction::from(tw_interaction);
 
-        interaction.perform(self).await
+        interaction.perform(self, env).await
     }
 }

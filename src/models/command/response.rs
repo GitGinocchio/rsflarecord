@@ -1,8 +1,5 @@
 use twilight_model::{channel::message::Embed, http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType}};
 
-
-
-
 pub struct CommandResponse {
     pub content: Option<String>,
     pub embeds: Vec<Embed>,

@@ -10,8 +10,7 @@ async fn fetch(
 ) -> Result<Response> {
     let mut bot = Bot::new();
 
-    bot.register_command_handler("Hello", "Say Hi to someone in chat!", async move |_interaction, _env| {
-
+    bot.register_command_handler("Hello", "Say Hi to someone in chat!", async move |_interaction, _data, _env| {
         None
     })?;
 

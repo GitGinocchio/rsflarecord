@@ -3,10 +3,18 @@ use twilight_model::guild::Permissions;
 use worker::Env;
 
 use crate::{
-    models::autocomplete::Autocomplete, 
-    models::response::CommandResponse,
-    error::Result
+    error::Result, 
+    models::{
+        autocomplete::Autocomplete, 
+        command::{data::CommandData, response::CommandResponse}, 
+        interaction::Interaction,
+    }
 };
+
+pub mod data;
+pub mod response;
+pub mod dispatcher;
+
 
 pub type CommandType = Box<dyn Command>;
 
@@ -27,11 +35,12 @@ pub trait Command: Send + Sync {
 
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
-    async fn execute(&self, interaction: (), env: Env) -> MaybeCommandResult { None }
-    async fn autocomplete(&self, interaction: (), env: Env) -> MaybeAutocompleteResult { None }
-
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
     fn groups(&self) -> Vec<SubcommandGroupType> { vec![] }
+
+    async fn autocomplete(&self, interaction: (), env: Env) -> MaybeAutocompleteResult { None }
+
+    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeCommandResult { None }
 }
 
 #[async_trait]
@@ -42,8 +51,9 @@ pub trait Subcommand: Send + Sync {
 
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
-    async fn execute(&self, interaction: (), env: Env) -> CommandResult;
     async fn autocomplete(&self, interaction: (), env: Env) -> MaybeAutocompleteResult { None }
+
+    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult;
 }
 
 #[async_trait]
@@ -56,8 +66,6 @@ pub trait SubcommandGroup: Send + Sync {
 
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
 }
-
-use std::future::Future;
 
 pub struct CommandHandler<F, Fut> {
     pub name: String,
@@ -80,14 +88,13 @@ impl<F, Fut> CommandHandler<F, Fut> {
 #[async_trait]
 impl<F, Fut> Command for CommandHandler<F, Fut> 
 where 
-    F: Fn((), Env) -> Fut + Send + Sync + 'static,
+    F: Fn(Interaction, CommandData, Env) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = MaybeCommandResult> + Send + Sync + 'static,
 {
     fn name(&self) -> String { self.name.clone() }
     fn description(&self) -> String { self.description.clone() }
 
-    async fn execute(&self, interaction: (), env: Env) -> MaybeCommandResult {
-        // Eseguiamo la closure che restituisce il Future e lo aspettiamo (await)
-        (self.handler)(interaction, env).await
+    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeCommandResult {
+        (self.handler)(interaction, data,  env).await
     }
 }

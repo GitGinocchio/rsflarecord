@@ -1,4 +1,4 @@
-use rsflarecord::models::command::{Command, MaybeCommandResult};
+use rsflarecord::models::{command::{Command, MaybeCommandResult, data::CommandData}, interaction::Interaction};
 use async_trait::async_trait;
 
 
@@ -14,7 +14,7 @@ impl Command for Hello {
         "Say Hi to someone in chat!".into()
     }
 
-    async fn execute(&self, interaction: (), env: worker::Env) -> MaybeCommandResult {
+    async fn execute(&self, interaction: Interaction, data: CommandData, env: worker::Env) -> MaybeCommandResult {
         None
     }
 }
