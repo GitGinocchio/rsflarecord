@@ -43,14 +43,13 @@ impl Interaction {
         };
 
         match CommandDispatcher::dispatch(command, self, data, env).await {
-            Some(Err(e)) => Ok(e.as_response()?),
-            Some(Ok(response)) => {
+            Err(e) => Ok(e.as_response()?),
+            Ok(response) => {
                 let value = serde_json::to_value::<InteractionResponse>(response.into())
                     .map_err(Error::JsonFailed)?;
 
                 Response::from_json(&value).map_err(Error::WorkerError)
-            },
-            None => Response::empty().map_err(Error::WorkerError)
+            }
         }
     }
 
@@ -65,14 +64,13 @@ impl Interaction {
         };
 
         match AutocompleteDispatcher::dispatch(command, self, data, env).await {
-            Some(Err(e)) => Ok(e.as_response()?),
-            Some(Ok(response)) => {
+            Err(e) => Ok(e.as_response()?),
+            Ok(response) => {
                 let value = serde_json::to_value::<InteractionResponse>(response.into())
                     .map_err(Error::JsonFailed)?;
 
                 Response::from_json(&value).map_err(Error::WorkerError)
             },
-            None => Response::empty().map_err(Error::WorkerError)
         }
     }
 

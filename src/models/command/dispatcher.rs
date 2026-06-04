@@ -1,6 +1,6 @@
 use worker::Env;
 
-use crate::{error::Error, models::{command::{Command, MaybeCommandResult, SubcommandGroup, data::CommandData}, interaction::Interaction}};
+use crate::{error::Error, models::{command::{Command, CommandResult, SubcommandGroup, data::CommandData}, interaction::Interaction}};
 
 pub (crate) struct CommandDispatcher;
 
@@ -10,11 +10,11 @@ impl CommandDispatcher {
         interaction: Interaction,
         data: CommandData,
         env: Env,
-    ) -> MaybeCommandResult {
+    ) -> CommandResult {
         if let Some(group_name) = data.get_subcommand_group_name() {
             if let Some(group) = cmd.groups().iter().find(|g| g.name() == group_name) {
                 let Some(inner_data) = data.get_inner() else {
-                    return Some(Err(Error::InvalidInteraction(format!("Missing inner data for the subgroup!"))));
+                    return Err(Error::InvalidInteraction(format!("Missing inner data for the subgroup!")));
                 };
 
                 return Self::dispatch_group(group, interaction, inner_data, env).await
@@ -24,10 +24,10 @@ impl CommandDispatcher {
         if let Some(sub_name) = data.get_subcommand_name() {
             if let Some(sub) = cmd.subcommands().iter().find(|s| s.name() == sub_name) {
                 let Some(inner_data) = data.get_inner() else {
-                    return Some(Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!"))));
+                    return Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!")));
                 };
 
-                return Some(sub.execute(interaction, inner_data, env).await)
+                return sub.execute(interaction, inner_data, env).await
             }
         }
 
@@ -39,17 +39,17 @@ impl CommandDispatcher {
         interaction: Interaction,
         data: CommandData,
         env: Env
-    ) -> MaybeCommandResult {
+    ) -> CommandResult {
         if let Some(sub_name) = data.get_subcommand_name() {
             if let Some(sub) = group.subcommands().iter().find(|s| s.name() == sub_name) {
                 let Some(inner_data) = data.get_inner() else {
-                    return Some(Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!"))));
+                    return Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!")));
                 };
 
-                return Some(sub.execute(interaction, inner_data, env).await)
+                return sub.execute(interaction, inner_data, env).await
             }
         }
 
-        Some(Err(Error::CommandNotFound("Subcommand not found in group".into())))
+        Err(Error::CommandNotFound("Subcommand not found in group".into()))
     }
 }

@@ -13,6 +13,9 @@ pub struct CommandData(TwilightCommandData);
 #[allow(unused)]
 impl CommandData {
     pub fn get_option(&self, name: &str) -> Option<&CommandOptionValue> {
+        // TODO: questo metodo deve ritornare un tipo creato da noi che deve essere presente in ./option
+        // Sarebbe meglio un metodo che e' in grado di provare a fare il cast a quello specifico tipo
+        // in caso manda errore o ritorna None se non c'e' il valore
         self.options
             .iter()
             .find(|opt| opt.name == name)

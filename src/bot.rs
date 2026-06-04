@@ -4,8 +4,8 @@ use twilight_model::application::interaction::Interaction as TwilightInteraction
 use worker::{Env, Request, Response};
 
 use crate::models::command::data::CommandData;
-use crate::models::command::CommandHandler;
-use crate::models::command::{CommandType, MaybeCommandResult};
+use crate::models::command::{CommandHandler, CommandResult};
+use crate::models::command::{CommandType};
 use crate::models::components::ComponentType;
 use crate::models::interaction::Interaction;
 use crate::models::modal::ModalType;
@@ -48,7 +48,7 @@ impl Bot {
     ) -> Result<()> 
     where 
         F: Fn(Interaction, CommandData, Env) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = MaybeCommandResult> + Send + Sync + 'static,
+        Fut: Future<Output = CommandResult> + Send + Sync + 'static,
     {
         let handler = CommandHandler::new(name.into(), description.into(), handler);
         self.register_command(Box::new(handler))

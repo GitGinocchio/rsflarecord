@@ -4,8 +4,8 @@ use crate::{
     error::Error, 
     models::{
         command::{
+            AutocompleteResult, 
             Command, 
-            MaybeAutocompleteResult, 
             SubcommandGroup, 
             data::CommandData
         }, 
@@ -21,11 +21,11 @@ impl AutocompleteDispatcher {
         interaction: Interaction,
         data: CommandData,
         env: Env,
-    ) -> MaybeAutocompleteResult {
+    ) -> AutocompleteResult {
         if let Some(group_name) = data.get_subcommand_group_name() {
             if let Some(group) = cmd.groups().iter().find(|g| g.name() == group_name) {
                 let Some(inner_data) = data.get_inner() else {
-                    return Some(Err(Error::InvalidInteraction(format!("Missing inner data for the subgroup!"))));
+                    return Err(Error::InvalidInteraction(format!("Missing inner data for the subgroup!")));
                 };
 
                 return Self::dispatch_group(group, interaction, inner_data, env).await
@@ -35,10 +35,10 @@ impl AutocompleteDispatcher {
         if let Some(sub_name) = data.get_subcommand_name() {
             if let Some(sub) = cmd.subcommands().iter().find(|s| s.name() == sub_name) {
                 let Some(inner_data) = data.get_inner() else {
-                    return Some(Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!"))));
+                    return Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!")));
                 };
 
-                return Some(sub.autocomplete(interaction, inner_data, env).await?)
+                return sub.autocomplete(interaction, inner_data, env).await
             }
         }
 
@@ -50,17 +50,17 @@ impl AutocompleteDispatcher {
         interaction: Interaction,
         data: CommandData,
         env: Env
-    ) -> MaybeAutocompleteResult {
+    ) -> AutocompleteResult {
         if let Some(sub_name) = data.get_subcommand_name() {
             if let Some(sub) = group.subcommands().iter().find(|s| s.name() == sub_name) {
                 let Some(inner_data) = data.get_inner() else {
-                    return Some(Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!"))));
+                    return Err(Error::InvalidInteraction(format!("Missing inner data for the subcommand!")));
                 };
 
                 return sub.autocomplete(interaction, inner_data, env).await;
             }
         }
 
-        Some(Err(Error::CommandNotFound("Subcommand not found in group".into())))
+        Err(Error::CommandNotFound("Subcommand not found in group".into()))
     }
 }

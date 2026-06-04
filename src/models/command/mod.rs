@@ -3,12 +3,11 @@ use twilight_model::guild::Permissions;
 use worker::Env;
 
 use crate::{
-    error::Result, 
+    error::{Error, Result}, 
     models::{
         autocomplete::response::AutocompleteResponse, 
         command::{
-            data::CommandData, 
-            response::CommandResponse
+            data::CommandData, option::CommandOption, response::CommandResponse
         }, 
         interaction::Interaction,
     }
@@ -16,19 +15,19 @@ use crate::{
 
 pub mod data;
 pub mod response;
+pub mod option;
 pub mod dispatcher;
 
 
 pub type CommandType = Box<dyn Command>;
 
+pub type CommandOptions = Option<Vec<CommandOption>>;
+
 pub type SubcommandType = Box<dyn Subcommand>;
 pub type SubcommandGroupType = Box<dyn SubcommandGroup>;
 
 pub type CommandResult = Result<CommandResponse>;
-pub type MaybeCommandResult = Option<CommandResult>;
-
 pub type AutocompleteResult = Result<AutocompleteResponse>;
-pub type MaybeAutocompleteResult = Option<AutocompleteResult>;
 
 #[async_trait]
 #[allow(unused)]
@@ -40,10 +39,15 @@ pub trait Command: Send + Sync {
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
     fn groups(&self) -> Vec<SubcommandGroupType> { vec![] }
 
-    fn options(&self) -> Option<()> { None }
+    fn options(&self) -> CommandOptions { None }
 
-    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
-    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeCommandResult { None }
+    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> AutocompleteResult {
+        Err(Error::AutocompleteNotImplemented(self.name()))
+    }
+
+    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult {
+        Err(Error::ExecuteNotImplemented(self.name()))
+    }
 }
 
 #[async_trait]
@@ -53,9 +57,12 @@ pub trait Subcommand: Send + Sync {
     fn description(&self) -> String;
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
-    fn options(&self) -> Option<()> { None }
+    fn options(&self) -> CommandOptions { None }
 
-    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
+    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> AutocompleteResult {
+        Err(Error::AutocompleteNotImplemented(self.name()))
+    }
+
     async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult;
 }
 
@@ -91,12 +98,12 @@ impl<F, Fut> CommandHandler<F, Fut> {
 impl<F, Fut> Command for CommandHandler<F, Fut> 
 where 
     F: Fn(Interaction, CommandData, Env) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = MaybeCommandResult> + Send + Sync + 'static,
+    Fut: Future<Output = CommandResult> + Send + Sync + 'static,
 {
     fn name(&self) -> String { self.name.clone() }
     fn description(&self) -> String { self.description.clone() }
 
-    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeCommandResult {
+    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult {
         (self.handler)(interaction, data,  env).await
     }
 }

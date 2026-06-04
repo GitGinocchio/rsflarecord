@@ -12,6 +12,8 @@ use twilight_model::{
     }
 };
 
+pub mod builder;
+
 pub type AutocompleteValue = CommandOptionChoiceValue;    
 
 pub struct AutocompleteResponse {

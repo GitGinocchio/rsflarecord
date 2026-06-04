@@ -37,6 +37,12 @@ pub enum Error {
     #[error("Component '{0}' is not registered")]
     ComponentNotFound(String),
 
+    #[error("Execute not implemented for command: '{0}'")]
+    ExecuteNotImplemented(String),
+
+    #[error("Autocomplete not implemented for comand: '{0}'")]
+    AutocompleteNotImplemented(String),
+
     #[error("Error communicating with {0}")]
     UpstreamError(String),
 

@@ -1,6 +1,6 @@
 use worker::*;
 
-use flarecord::{bot::Bot, models::command::response::CommandResponse};
+use flarecord::prelude::*;
 
 #[event(fetch)]
 async fn fetch(
@@ -13,7 +13,7 @@ async fn fetch(
     bot.register_command_handler("Hello", "Say Hi to someone in chat!", async move |_interaction, _data, _env| {
         let response = CommandResponse::new();
 
-        Some(Ok(response))
+        Ok(response)
     })?;
 
     bot.handle(req, env).await
