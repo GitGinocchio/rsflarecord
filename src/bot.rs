@@ -9,17 +9,22 @@ use crate::models::command::{CommandType, MaybeCommandResult};
 use crate::error::{Error, Result};
 use crate::crypto;
 use crate::models::interaction::Interaction;
+use crate::models::modal::ModalType;
 
 #[allow(unused)]
 pub struct Bot {
-    pub commands: HashMap<String, CommandType>
+    pub (crate) commands: HashMap<String, CommandType>,
+    pub (crate) components: HashMap<String, ()>,
+    pub (crate) modals: HashMap<String, ModalType>
 }
 
 #[allow(unused)]
 impl Bot {
     pub fn new() -> Self {
         Self {
-            commands: HashMap::new()
+            components: HashMap::new(),
+            commands: HashMap::new(),
+            modals: HashMap::new()
         }
     }
 
@@ -45,10 +50,7 @@ impl Bot {
         Fut: Future<Output = MaybeCommandResult> + Send + Sync + 'static,
     {
         let handler = CommandHandler::new(name.into(), description.into(), handler);
-
-        self.register_command(Box::new(handler))?;
-
-        Ok(())
+        self.register_command(Box::new(handler))
     }
 
     pub async fn handle(&self, mut req: Request, env: Env) -> Result<Response> {

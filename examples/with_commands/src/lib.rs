@@ -1,6 +1,6 @@
 use worker::*;
 
-use rsflarecord::bot::Bot;
+use flarecord::bot::Bot;
 
 mod commands;
 use commands::hello::Hello;

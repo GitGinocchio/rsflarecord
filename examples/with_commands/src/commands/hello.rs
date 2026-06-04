@@ -1,4 +1,4 @@
-use rsflarecord::models::{command::{Command, MaybeCommandResult, data::CommandData}, interaction::Interaction};
+use flarecord::models::{command::{Command, MaybeCommandResult, data::CommandData}, interaction::Interaction};
 use async_trait::async_trait;
 
 

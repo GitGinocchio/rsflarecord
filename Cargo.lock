@@ -192,6 +192,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
+name = "flarecord"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "ed25519-dalek",
+ "hex",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "twilight-model",
+ "twilight-util",
+ "twilight-validate",
+ "worker",
+]
+
+[[package]]
 name = "form_urlencoded"
 version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -573,22 +589,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rsflarecord"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "ed25519-dalek",
- "hex",
- "serde",
- "serde_json",
- "thiserror",
- "twilight-model",
- "twilight-util",
- "twilight-validate",
- "worker",
-]
-
-[[package]]
 name = "rustc_version"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -727,7 +727,7 @@ name = "simple"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "rsflarecord",
+ "flarecord",
  "worker",
  "worker-macros",
 ]
@@ -1035,7 +1035,7 @@ name = "with_commands"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "rsflarecord",
+ "flarecord",
  "worker",
  "worker-macros",
 ]

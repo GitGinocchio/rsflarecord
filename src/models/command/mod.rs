@@ -5,8 +5,11 @@ use worker::Env;
 use crate::{
     error::Result, 
     models::{
-        autocomplete::Autocomplete, 
-        command::{data::CommandData, response::CommandResponse}, 
+        autocomplete::response::AutocompleteResponse, 
+        command::{
+            data::CommandData, 
+            response::CommandResponse
+        }, 
         interaction::Interaction,
     }
 };
@@ -24,7 +27,7 @@ pub type SubcommandGroupType = Box<dyn SubcommandGroup>;
 pub type CommandResult = Result<CommandResponse>;
 pub type MaybeCommandResult = Option<CommandResult>;
 
-pub type AutocompleteResult = Result<Autocomplete>;
+pub type AutocompleteResult = Result<AutocompleteResponse>;
 pub type MaybeAutocompleteResult = Option<AutocompleteResult>;
 
 #[async_trait]
@@ -38,7 +41,7 @@ pub trait Command: Send + Sync {
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
     fn groups(&self) -> Vec<SubcommandGroupType> { vec![] }
 
-    async fn autocomplete(&self, interaction: (), env: Env) -> MaybeAutocompleteResult { None }
+    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
 
     async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeCommandResult { None }
 }
@@ -51,7 +54,7 @@ pub trait Subcommand: Send + Sync {
 
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
-    async fn autocomplete(&self, interaction: (), env: Env) -> MaybeAutocompleteResult { None }
+    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
 
     async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult;
 }

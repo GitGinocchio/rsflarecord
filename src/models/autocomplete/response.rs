@@ -14,11 +14,11 @@ use twilight_model::{
 
 pub type AutocompleteValue = CommandOptionChoiceValue;    
 
-pub struct Autocomplete {
+pub struct AutocompleteResponse {
     pub choices: Vec<CommandOptionChoice>
 }
 
-impl Autocomplete {
+impl AutocompleteResponse {
     pub fn new() -> Self {
         Self { choices: Vec::new() }
     }
@@ -32,7 +32,7 @@ impl Autocomplete {
     }
 }
 
-impl Into<InteractionResponse> for Autocomplete {
+impl Into<InteractionResponse> for AutocompleteResponse {
     fn into(self) -> InteractionResponse {
         InteractionResponse {
             kind: InteractionResponseType::ApplicationCommandAutocompleteResult,

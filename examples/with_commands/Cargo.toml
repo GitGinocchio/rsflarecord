@@ -15,4 +15,4 @@ worker-macros = { version = "0.8" }
 
 async-trait = "0.1.89"
 
-rsflarecord = { path = "../../" }
+flarecord = { path = "../../" }
