@@ -53,7 +53,7 @@ impl Bot {
         self.register_command(Box::new(handler))
     }
 
-    pub async fn handle(&self, mut req: Request, env: Env) -> Result<Response> {
+    pub async fn handle(&self, mut req: Request, env: Env) -> worker::Result<Response> {
         let body = req.bytes().await?;
         let headers = req.headers();
 
@@ -64,12 +64,15 @@ impl Bot {
         let is_valid = crypto::verify_signature(headers, &body, &public_key)?;
 
         if !is_valid {
-            return Response::error("Unauthorized", 401).map_err(Error::WorkerError);
+            return Response::error("Unauthorized", 401);
         }
 
         let tw_interaction: TwilightInteraction = serde_json::from_slice(&body)?;
         let interaction = Interaction::from(tw_interaction);
 
-        interaction.perform(self, env).await
+        match interaction.perform(self, env).await {
+            Ok(response) => Ok(response),
+            Err(e) => e.as_response()
+        }
     }
 }

@@ -31,6 +31,12 @@ pub enum Error {
     #[error("Command '{0}' is not registered")]
     CommandNotFound(String),
 
+    #[error("Modal '{0}' is not registered")]
+    ModalNotFound(String),
+
+    #[error("Component '{0}' is not registered")]
+    ComponentNotFound(String),
+
     #[error("Error communicating with {0}")]
     UpstreamError(String),
 

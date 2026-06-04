@@ -16,8 +16,5 @@ async fn fetch(
         Some(Ok(response))
     })?;
 
-    match bot.handle(req, env).await {
-        Ok(response) => Ok(response),
-        Err(e) => e.as_response()
-    }
+    bot.handle(req, env).await
 }

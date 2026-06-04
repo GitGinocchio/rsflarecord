@@ -4,7 +4,7 @@ use twilight_model::{application::interaction::{
 }, http::interaction::{InteractionResponse, InteractionResponseType}};
 use worker::{Env, Response};
 
-use crate::{bot::Bot, error::{Error, Result}, models::{autocomplete::dispatcher::AutocompleteDispatcher, command::{data::CommandData, dispatcher::CommandDispatcher}}};
+use crate::{bot::Bot, error::{Error, Result}, models::{autocomplete::dispatcher::AutocompleteDispatcher, command::{data::CommandData, dispatcher::CommandDispatcher}, modal::data::ModalData}};
 
 
 pub struct Interaction(TwilightInteraction);
@@ -16,7 +16,7 @@ impl Interaction {
             InteractionType::ApplicationCommandAutocomplete => self.handle_autocomplete(bot, env).await,
             InteractionType::ApplicationCommand => self.handle_command(bot, env).await,
             InteractionType::MessageComponent => self.handle_component(bot).await,
-            InteractionType::ModalSubmit => self.handle_modal_submit(bot).await,
+            InteractionType::ModalSubmit => self.handle_modal_submit(bot, env).await,
             InteractionType::Ping => self.handle_ping(bot).await,
             _ => Ok(Response::empty()?)
         }
@@ -76,8 +76,20 @@ impl Interaction {
         }
     }
 
-    async fn handle_modal_submit(&self, bot: &Bot) -> Result<Response> {
-        Ok(Response::empty()?)
+    async fn handle_modal_submit(self, bot: &Bot, env: Env) -> Result<Response> {
+        let mut data = match self.data.as_ref() {
+            Some(InteractionData::ModalSubmit(data)) => ModalData::from(*data.clone()),
+            Some(_) | None => return Err(Error::InvalidPayload("Missing or invalid modal data".into()))
+        };
+
+        let Some(modal) = bot.modals.get(&data.custom_id) else {
+            return Err(Error::ModalNotFound(format!("{}", data.custom_id)))
+        };
+
+        match modal.on_submit(self, data, env).await {
+            Ok(response) => Ok(Response::empty()?),
+            Err(e) => Ok(e.as_response()?)
+        }
     }
 
     async fn handle_component(&self, bot: &Bot) -> Result<Response> {
