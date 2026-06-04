@@ -6,15 +6,16 @@ use worker::{Env, Request, Response};
 use crate::models::command::data::CommandData;
 use crate::models::command::CommandHandler;
 use crate::models::command::{CommandType, MaybeCommandResult};
-use crate::error::{Error, Result};
-use crate::crypto;
+use crate::models::components::ComponentType;
 use crate::models::interaction::Interaction;
 use crate::models::modal::ModalType;
+use crate::error::{Error, Result};
+use crate::crypto;
 
 #[allow(unused)]
 pub struct Bot {
     pub (crate) commands: HashMap<String, CommandType>,
-    pub (crate) components: HashMap<String, ()>,
+    pub (crate) components: HashMap<String, ComponentType>,
     pub (crate) modals: HashMap<String, ModalType>
 }
 

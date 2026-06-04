@@ -35,14 +35,14 @@ pub type MaybeAutocompleteResult = Option<AutocompleteResult>;
 pub trait Command: Send + Sync {
     fn name(&self) -> String;
     fn description(&self) -> String;
-
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
     fn groups(&self) -> Vec<SubcommandGroupType> { vec![] }
 
-    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
+    fn options(&self) -> Option<()> { None }
 
+    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
     async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeCommandResult { None }
 }
 
@@ -51,11 +51,11 @@ pub trait Command: Send + Sync {
 pub trait Subcommand: Send + Sync {
     fn name(&self) -> String;
     fn description(&self) -> String;
-
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
-    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
+    fn options(&self) -> Option<()> { None }
 
+    async fn autocomplete(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeAutocompleteResult { None }
     async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult;
 }
 
@@ -64,7 +64,6 @@ pub trait Subcommand: Send + Sync {
 pub trait SubcommandGroup: Send + Sync {
     fn name(&self) -> String;
     fn description(&self) -> String;
-
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }

@@ -1,5 +1,6 @@
 use flarecord::models::{command::{Command, MaybeCommandResult, data::CommandData}, interaction::Interaction};
 use async_trait::async_trait;
+use worker::Env;
 
 
 pub struct Hello;
@@ -14,7 +15,11 @@ impl Command for Hello {
         "Say Hi to someone in chat!".into()
     }
 
-    async fn execute(&self, interaction: Interaction, data: CommandData, env: worker::Env) -> MaybeCommandResult {
+    fn options(&self) -> Option<()> {
+        None
+    }
+
+    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> MaybeCommandResult {
         None
     }
 }

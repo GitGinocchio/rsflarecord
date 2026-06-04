@@ -4,7 +4,7 @@ use twilight_model::{application::interaction::{
 }, http::interaction::{InteractionResponse, InteractionResponseType}};
 use worker::{Env, Response};
 
-use crate::{bot::Bot, error::{Error, Result}, models::{autocomplete::dispatcher::AutocompleteDispatcher, command::{data::CommandData, dispatcher::CommandDispatcher}, modal::data::ModalData}};
+use crate::{bot::Bot, error::{Error, Result}, models::{autocomplete::dispatcher::AutocompleteDispatcher, command::{data::CommandData, dispatcher::CommandDispatcher}, components::data::ComponentData, modal::data::ModalData}};
 
 
 pub struct Interaction(TwilightInteraction);
@@ -93,6 +93,15 @@ impl Interaction {
     }
 
     async fn handle_component(&self, bot: &Bot) -> Result<Response> {
+        let mut data = match self.data.as_ref() {
+            Some(InteractionData::MessageComponent(data)) => ComponentData::from(*data.clone()),
+            Some(_) | None => return Err(Error::InvalidPayload("Missing or invalid modal data".into()))
+        };
+
+        let Some(component) = bot.components.get(&data.custom_id) else {
+            return Err(Error::ComponentNotFound(format!("{}", data.custom_id)))
+        };
+
         Ok(Response::empty()?)
     }
 }
