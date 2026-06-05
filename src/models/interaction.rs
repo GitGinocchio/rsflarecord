@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::{Arc, RwLock}};
+use std::{ops::Deref};
 use twilight_model::{application::interaction::{
     Interaction as TwilightInteraction, InteractionData, InteractionType
 }, http::interaction::{InteractionResponse, InteractionResponseType}};

@@ -1,10 +1,6 @@
-use std::sync::{PoisonError, RwLock, RwLockReadGuard};
-
 use hex::FromHexError;
 use thiserror::Error;
 use worker::Response;
-
-use crate::bot::Bot;
 
 #[derive(Error, Debug)]
 pub enum Error {

@@ -1,5 +1,3 @@
-
-
 pub use crate::models::autocomplete::response::{AutocompleteResponse, AutocompleteValue};
 pub use crate::models::command::{
     response::{CommandResponse, builder::CommandResponseBuilder},

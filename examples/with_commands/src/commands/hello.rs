@@ -1,6 +1,5 @@
-use flarecord::{models::command::context::CommandContext, prelude::*, twilight_model::user::User};
+use flarecord::{models::command::context::CommandContext, prelude::*};
 use async_trait::async_trait;
-use worker::Env;
 
 pub struct Hello;
 
@@ -21,7 +20,7 @@ impl Command for Hello {
     }
 
     async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
-        let user_id = ctx.data.get_user_option("user")?;
+        let _user_id = ctx.data.get_user_option("user")?;
 
         let message = match interaction.author() {
             Some(author) => format!("Hello {0} from {0}", author.name),
