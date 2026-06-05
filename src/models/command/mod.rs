@@ -7,7 +7,7 @@ use crate::{
     models::{
         autocomplete::response::AutocompleteResponse, 
         command::{
-            data::CommandData, option::CommandOption, response::CommandResponse
+            context::CommandContext, data::CommandData, option::CommandOption, response::CommandResponse
         }, 
         interaction::Interaction,
     }
@@ -17,6 +17,7 @@ pub mod data;
 pub mod response;
 pub mod option;
 pub mod dispatcher;
+pub mod context;
 
 
 pub type CommandType = Box<dyn Command>;
@@ -45,7 +46,7 @@ pub trait Command: Send + Sync {
         Err(Error::AutocompleteNotImplemented(self.name()))
     }
 
-    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult {
+    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
         Err(Error::ExecuteNotImplemented(self.name()))
     }
 }
@@ -63,7 +64,7 @@ pub trait Subcommand: Send + Sync {
         Err(Error::AutocompleteNotImplemented(self.name()))
     }
 
-    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult;
+    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult;
 }
 
 #[async_trait]
@@ -97,13 +98,13 @@ impl<F, Fut> CommandHandler<F, Fut> {
 #[async_trait]
 impl<F, Fut> Command for CommandHandler<F, Fut> 
 where 
-    F: Fn(Interaction, CommandData, Env) -> Fut + Send + Sync + 'static,
+    F: Fn(Interaction, CommandContext) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = CommandResult> + Send + Sync + 'static,
 {
     fn name(&self) -> String { self.name.clone() }
     fn description(&self) -> String { self.description.clone() }
 
-    async fn execute(&self, interaction: Interaction, data: CommandData, env: Env) -> CommandResult {
-        (self.handler)(interaction, data,  env).await
+    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
+        (self.handler)(interaction, ctx).await
     }
 }

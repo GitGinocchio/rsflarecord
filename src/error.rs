@@ -1,9 +1,16 @@
+use std::sync::{PoisonError, RwLock, RwLockReadGuard};
+
 use hex::FromHexError;
 use thiserror::Error;
 use worker::Response;
 
+use crate::bot::Bot;
+
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Lock poisoned")]
+    LockPoisoned,
+
     #[error("Header '{0}' not found.")]
     MissingHeader(String),
 
@@ -12,6 +19,9 @@ pub enum Error {
 
     #[error("Invalid interaction: {0}")]
     InvalidInteraction(String),
+
+    #[error("Error resolving value: {0}")]
+    ResolveError(String),
 
     #[error("Invalid public key or signature format: {0:?}")]
     CryptoError(#[from] ed25519_dalek::SignatureError),
@@ -30,6 +40,9 @@ pub enum Error {
 
     #[error("Command '{0}' is not registered")]
     CommandNotFound(String),
+
+    #[error("Option '{0}' not found")]
+    OptionNotFound(String),
 
     #[error("Modal '{0}' is not registered")]
     ModalNotFound(String),
@@ -58,7 +71,7 @@ impl Error {
 
 impl From<Error> for worker::Error {
     fn from(value: Error) -> Self {
-        Self::from(format!("[rsflarecord] Error: {}", value))
+        Self::from(format!("[rsflarecord] Error: {:?}", value))
     }
 }
 

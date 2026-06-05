@@ -1,19 +1,25 @@
+use std::sync::{Arc, LazyLock, RwLock};
+
 use worker::*;
 
-use flarecord::bot::Bot;
+use flarecord::bot::{Bot, builder::BotBuilder};
 
 mod commands;
 use commands::hello::Hello;
 
+static BOT: LazyLock<Arc<RwLock<Bot>>> = LazyLock::new(|| {
+    BotBuilder::new()
+        .register_command(Box::new(Hello))
+        .build()
+});
+
 #[event(fetch)]
 async fn fetch(
-    _req: Request,
-    _env: Env,
+    req: Request,
+    env: Env,
     _ctx: Context,
 ) -> Result<Response> {
-    let mut bot = Bot::new();
+    let bot = BOT.read().map_err(|_| Error::Infallible)?;
 
-    bot.register_command(Box::new(Hello))?;
-
-    Response::ok("Hello World!")
+    bot.handle(req, env).await
 }

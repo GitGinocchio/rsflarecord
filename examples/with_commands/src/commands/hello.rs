@@ -1,4 +1,4 @@
-use flarecord::prelude::*;
+use flarecord::{models::command::context::CommandContext, prelude::*, twilight_model::user::User};
 use async_trait::async_trait;
 use worker::Env;
 
@@ -20,7 +20,9 @@ impl Command for Hello {
         ])
     }
 
-    async fn execute(&self, interaction: Interaction, data: CommandData, _env: Env) -> CommandResult {
+    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
+        let user_id = ctx.data.get_user_option("user")?;
+
         let message = match interaction.author() {
             Some(author) => format!("Hello {0} from {0}", author.name),
             None => format!("Hello!")

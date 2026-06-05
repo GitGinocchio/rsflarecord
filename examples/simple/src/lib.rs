@@ -8,13 +8,15 @@ async fn fetch(
     env: Env,
     _ctx: Context,
 ) -> Result<Response> {
-    let mut bot = Bot::new();
+    let bot = Bot::new();
 
-    bot.register_command_handler("Hello", "Say Hi to someone in chat!", async move |_interaction, _data, _env| {
+    let mut bot_guard = bot.write().map_err(|_| Error::Infallible)?;
+
+    bot_guard.register_command_handler("Hello", "Say Hi to someone in chat!", async move |_interaction, _ctx| {
         let response = CommandResponse::new();
 
         Ok(response)
-    })?;
+    });
 
-    bot.handle(req, env).await
+    bot_guard.handle(req, env).await
 }

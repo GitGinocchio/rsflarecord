@@ -8,6 +8,8 @@ use twilight_model::{
     channel::ChannelType
 };
 
+pub mod value;
+
 pub struct CommandOption {
     name: String,
     description: String,

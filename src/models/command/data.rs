@@ -1,30 +1,58 @@
-use std::ops::Deref;
-
-use twilight_model::application::interaction::{
-    application_command::{
-        CommandData as TwilightCommandData, 
-        CommandOptionValue
+use twilight_model::{
+    application::{
+        command::CommandType, 
+        interaction::application_command::{
+            CommandData as TwilightCommandData, 
+            CommandOptionValue as TwilightCommandOptionValue
+        }
+    }, 
+    id::{
+        Id, 
+        marker::{
+            CommandMarker, GenericMarker, GuildMarker
+        }
     }
 };
 
+use crate::{error::Error, models::command::option::value::CommandOptionValue};
 
-pub struct CommandData(TwilightCommandData);
+pub struct CommandData(pub (crate) TwilightCommandData);
 
 #[allow(unused)]
 impl CommandData {
-    pub fn get_option(&self, name: &str) -> Option<&CommandOptionValue> {
-        // TODO: questo metodo deve ritornare un tipo creato da noi che deve essere presente in ./option
-        // Sarebbe meglio un metodo che e' in grado di provare a fare il cast a quello specifico tipo
-        // in caso manda errore o ritorna None se non c'e' il valore
-        self.options
-            .iter()
-            .find(|opt| opt.name == name)
-            .map(|o| &o.value)
+    /// ID of the guild the command is registered to.
+    pub fn guild_id(&self) -> Option<Id<GuildMarker>> {
+        self.0.guild_id
+    }
+
+    /// If this is a user or message command, the ID of the targeted user/message.
+    pub fn target_id(&self) -> Option<Id<GenericMarker>> {
+        self.0.target_id
+    }
+
+    pub fn command_id(&self) -> Id<CommandMarker> {
+        self.0.id
+    }
+
+    pub fn command_name(&self) -> &String {
+        &self.0.name
+    }
+
+    pub fn command_type(&self) -> CommandType {
+        self.0.kind
+    }
+
+    pub fn get_option(&self, name: &str) -> Result<CommandOptionValue, Error> {
+        let Some(option) = self.0.options.iter().find(|opt| opt.name == name) else {
+            return Err(Error::OptionNotFound(name.into()));
+        };
+
+        CommandOptionValue::try_from(option.value.clone())
     }
 
     pub (crate) fn get_subcommand_name(&self) -> Option<&str> {
-        self.options.iter().find_map(|opt| match opt.value {
-            CommandOptionValue::SubCommand(_) => {
+        self.0.options.iter().find_map(|opt| match opt.value {
+            TwilightCommandOptionValue::SubCommand(_) => {
                 Some(opt.name.as_str())
             }
             _ => None
@@ -32,8 +60,8 @@ impl CommandData {
     }
 
     pub (crate) fn get_subcommand_group_name(&self) -> Option<&str> {
-        self.options.iter().find_map(|opt| match opt.value {
-            CommandOptionValue::SubCommandGroup(_) => {
+        self.0.options.iter().find_map(|opt| match opt.value {
+            TwilightCommandOptionValue::SubCommandGroup(_) => {
                 Some(opt.name.as_str())
             }
             _ => None,
@@ -42,15 +70,15 @@ impl CommandData {
 
     pub (crate) fn get_inner(&self) -> Option<CommandData> {
         self.0.options.iter().find_map(|opt| {
-            if let CommandOptionValue::SubCommand(sub_options) = &opt.value {
+            if let TwilightCommandOptionValue::SubCommand(sub_options) = &opt.value {
                 Some(CommandData(TwilightCommandData {
                     name: opt.name.clone(),
                     options: sub_options.clone(),
                     resolved: self.0.resolved.clone(),
                     guild_id: self.0.guild_id,
-                    id: self.id,
-                    kind: self.kind,
-                    target_id: self.target_id
+                    id: self.0.id,
+                    kind: self.0.kind,
+                    target_id: self.0.target_id
                 }))
             } else {
                 None
@@ -62,13 +90,5 @@ impl CommandData {
 impl From<TwilightCommandData> for CommandData {
     fn from(value: TwilightCommandData) -> Self {
         Self(value)
-    }
-}
-
-impl Deref for CommandData {
-    type Target = TwilightCommandData;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
