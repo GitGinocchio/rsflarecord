@@ -1,6 +1,6 @@
 use worker::*;
 
-use flarecord::prelude::*;
+use flarecord::{bot::builder::BotBuilder, prelude::*};
 
 #[event(fetch)]
 async fn fetch(
@@ -8,15 +8,13 @@ async fn fetch(
     env: Env,
     _ctx: Context,
 ) -> Result<Response> {
-    let bot = Bot::new();
+    let bot = BotBuilder::new()
+        .register_command_handler("Hello", "Say Hi to someone in chat!", async move |_interaction, _ctx| {
+            let response = CommandResponse::new();
 
-    let mut bot_guard = bot.write().map_err(|_| Error::Infallible)?;
+            Ok(response)
+        })
+        .build();
 
-    bot_guard.register_command_handler("Hello", "Say Hi to someone in chat!", async move |_interaction, _ctx| {
-        let response = CommandResponse::new();
-
-        Ok(response)
-    });
-
-    bot_guard.handle(req, env).await
+    bot.handle(req, env).await
 }

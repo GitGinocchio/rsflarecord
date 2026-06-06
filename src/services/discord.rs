@@ -8,4 +8,8 @@ impl DiscordService {
     pub fn new() -> Self {
         Self
     }
+
+    pub fn fetch_user(&self) {
+        
+    }
 }

@@ -39,9 +39,8 @@ impl Interaction {
         };
         
         let bot = Bot::get_global();
-        let bot_guard = bot.read().map_err(|e| Error::LockPoisoned)?;
 
-        let Some(command) = bot_guard.commands.get(&data.0.name) else {
+        let Some(command) = bot.commands.get(&data.0.name) else {
             return Err(Error::CommandNotFound(format!("{}", data.0.name)))
         };
 
@@ -65,9 +64,7 @@ impl Interaction {
         };
 
         let bot = Bot::get_global();
-        let bot_guard = bot.read().map_err(|e| Error::LockPoisoned)?;
-
-        let Some(command) = bot_guard.commands.get(&data.0.name) else {
+        let Some(command) = bot.commands.get(&data.0.name) else {
             return Err(Error::CommandNotFound(format!("{}", data.0.name)))
         };
 
@@ -89,9 +86,7 @@ impl Interaction {
         };
 
         let bot = Bot::get_global();
-        let bot_guard = bot.read().map_err(|e| Error::LockPoisoned)?;
-
-        let Some(modal) = bot_guard.modals.get(&data.custom_id) else {
+        let Some(modal) = bot.modals.get(&data.custom_id) else {
             return Err(Error::ModalNotFound(format!("{}", data.custom_id)))
         };
 
@@ -108,9 +103,7 @@ impl Interaction {
         };
 
         let bot = Bot::get_global();
-        let bot_guard = bot.read().map_err(|e| Error::LockPoisoned)?;
-
-        let Some(component) = bot_guard.components.get(&data.custom_id) else {
+        let Some(component) = bot.components.get(&data.custom_id) else {
             return Err(Error::ComponentNotFound(format!("{}", data.custom_id)))
         };
 
