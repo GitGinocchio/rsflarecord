@@ -25,6 +25,7 @@ flarecord = { git = "https://github.com/GitGinocchio/flarecord-rs" }
 Implementing a command is simple using the `Command` trait.
 
 ```rust
+// src/commands/hello.rs
 use flarecord::prelude::*;
 use async_trait::async_trait;
 
@@ -65,6 +66,7 @@ impl Command for Hello {
 Configure your worker to handle incoming interactions:
 
 ```rust
+// src/lib.rs
 use std::sync::{Arc, LazyLock};
 use worker::*;
 
