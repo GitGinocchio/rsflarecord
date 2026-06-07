@@ -23,6 +23,7 @@ impl Command for Hello {
     async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
         let user_id = ctx.data.get_user_option("user")?.ok_or(Error::MissingOption("user".into()))?;
         let user = ctx.discord.fetch_user(&user_id).await?;
+        //let user = user_id.resolve().await?;
         
         let author = interaction.author().ok_or(Error::Generic("Missing author".into()))?;
         
