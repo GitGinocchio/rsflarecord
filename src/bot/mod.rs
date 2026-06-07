@@ -15,6 +15,7 @@ use crate::models::interaction::Interaction;
 use crate::models::modal::ModalType;
 use crate::error::Error;
 use crate::crypto;
+use crate::services::discord::DiscordService;
 
 pub mod builder;
 
@@ -40,15 +41,22 @@ impl Bot {
         BOT.get().expect("Bot not initiliazed").clone()
     }
 
-    pub (crate) fn init_client(&self, token: &str) -> Client {
+    pub (crate) fn ensure_global_client(&self, token: &str) -> &Arc<Client> {
+        if let Some(client) = HTTP_CLIENT.get() {
+            return client
+        }
+
         let mut headers = HeaderMap::new();
         headers.insert("Authorization", HeaderValue::from_str(&format!("Bot {}", token)).expect("Error parsing header value"));
         headers.insert("Content-Type", HeaderValue::from_static("application/json"));
 
-        Client::builder()
+        let client = Client::builder()
             .default_headers(headers)
             .build()
-            .expect("Error building reqwest::Client")
+            .expect("Error building reqwest::Client");
+
+        HTTP_CLIENT.set(Arc::new(client));
+        HTTP_CLIENT.get().expect("Client to be set")
     }
 
     pub (crate) fn new() -> Arc<Bot> {
@@ -97,12 +105,7 @@ impl Bot {
             .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
             .to_string();
 
-        if HTTP_CLIENT.get().is_none() {
-            let client = self.init_client(&token);
-            HTTP_CLIENT.set(Arc::new(client));
-        }
-
-        let client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
+        let client = self.ensure_global_client(&token);
 
         let url = format!(
             "https://discord.com/api/v10/applications/{}/commands",
@@ -116,14 +119,8 @@ impl Bot {
         let serialized_commands = serde_json::to_string(&serializable_commands).map_err(|e| Error::JsonFailed(e))?;
         worker::console_log!("Sending  : {}", serialized_commands);
 
-        client
-            .put(url)
-            .header("Authorization", format!("Bot {}", token))
-            .header("Content-Type", "application/json")
-            .body(serialized_commands)
-            .send()
-            .await
-            .map_err(|e| Error::ReqwestError(e))?;
+        let discord_service = DiscordService::get_or_init(client.clone());
+        discord_service.update_global_commands(&application_id, &serialized_commands).await?;
 
         IS_INITIALIZED.store(true, Ordering::Release);
 
@@ -138,14 +135,11 @@ impl Bot {
             .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
             .to_string();
 
-        if HTTP_CLIENT.get().is_none() {
-            let token = env.secret("DISCORD_BOT_TOKEN")
-                .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
-                .to_string();
+        let token = env.secret("DISCORD_BOT_TOKEN")
+            .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
+            .to_string();
 
-            let client = self.init_client(&token);
-            HTTP_CLIENT.set(Arc::new(client));
-        }
+        self.ensure_global_client(&token);
     
         let is_valid = crypto::verify_signature(headers, &body, &public_key)?;
 
