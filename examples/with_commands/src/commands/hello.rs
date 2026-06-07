@@ -16,18 +16,9 @@ impl Command for Hello {
 
     fn options(&self) -> CommandOptions {
         let user_option = CommandOptionBuilder::user("user", "the user to greet")
-            .autocomplete()
             .build()?;
        
-       
         Ok(Some(vec![user_option]))
-    }
-
-    async fn autocomplete(&self, _interaction: Interaction, _ctx: AutocompleteContext) -> AutocompleteResult {
-        let mut response = AutocompleteResponse::new();
-        response.add("test_name", "test_value", None);
-
-        Ok(response)
     }
 
     async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
