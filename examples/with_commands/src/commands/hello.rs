@@ -23,13 +23,10 @@ impl Command for Hello {
 
     async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
         let author = interaction.author().ok_or(Error::Generic("Missing author".into()))?;
-        let user = match ctx.data.get_user_option("user")? {
-            Some(user_id) => Some(ctx.discord.fetch_user(&user_id).await?),
-            None => None
-        };
+        let user = ctx.data.get_resolved_user("user");
 
         let message = match user {
-            Some(user) => format!("Hello {0}, {1} greeted you", user.name, author.name),
+            Some(user) => format!("Hello {0}, {1} greeted you", user.mention(), author.mention()),
             None => format!("Hello {0}!", author.name)
         };
         

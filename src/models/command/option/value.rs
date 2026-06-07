@@ -1,7 +1,5 @@
 use twilight_model::{application::interaction::application_command::CommandOptionValue as TwilightCommandOptionValue, id::{Id, marker::{AttachmentMarker, ChannelMarker, GenericMarker, RoleMarker, UserMarker}}};
 
-use crate::error::{Error, Result};
-
 pub enum CommandOptionValue {
     Attachment(Id<AttachmentMarker>),
     Boolean(bool),
@@ -14,98 +12,72 @@ pub enum CommandOptionValue {
     String(String)
 }
 
-impl TryFrom<TwilightCommandOptionValue> for CommandOptionValue {
-    type Error = Error;
-
-    fn try_from(value: TwilightCommandOptionValue) -> Result<Self> {
+impl From<&TwilightCommandOptionValue> for CommandOptionValue {
+    fn from(value: &TwilightCommandOptionValue) -> Self {
         match value {
-            TwilightCommandOptionValue::Attachment(id) => Ok(Self::Attachment(id)),
-            TwilightCommandOptionValue::Boolean(b) => Ok(Self::Boolean(b)),
-            TwilightCommandOptionValue::Channel(id) => Ok(Self::Channel(id)),
-            TwilightCommandOptionValue::Integer(i) => Ok(Self::Integer(i)),
-            TwilightCommandOptionValue::String(s) => Ok(Self::String(s)),
-            TwilightCommandOptionValue::User(id) => Ok(Self::User(id)),
-            TwilightCommandOptionValue::Role(id) => Ok(Self::Role(id)),
-            TwilightCommandOptionValue::Number(n) => Ok(Self::Number(n)),
-            TwilightCommandOptionValue::Mentionable(id) => Ok(Self::Mentionable(id)),
+            TwilightCommandOptionValue::Attachment(id) => Self::Attachment(*id),
+            TwilightCommandOptionValue::Boolean(b) => Self::Boolean(*b),
+            TwilightCommandOptionValue::Channel(id) => Self::Channel(*id),
+            TwilightCommandOptionValue::Integer(i) => Self::Integer(*i),
+            TwilightCommandOptionValue::String(s) => Self::String(s.clone()),
+            TwilightCommandOptionValue::User(id) => Self::User(*id),
+            TwilightCommandOptionValue::Role(id) => Self::Role(*id),
+            TwilightCommandOptionValue::Number(n) => Self::Number(*n),
+            TwilightCommandOptionValue::Mentionable(id) => Self::Mentionable(*id),
             
             TwilightCommandOptionValue::SubCommand(_) | 
             TwilightCommandOptionValue::SubCommandGroup(_) |
             TwilightCommandOptionValue::Focused(_, _)  => {
-                Err(Error::InvalidPayload(format!("Not a valid CommandOptionValue type!")))
+                unreachable!("Discord API contract violation: unexpected option type in command")
             }
         }
     }
 }
 
 macro_rules! impl_option_accessors {
-    ($($as_name:ident, $get_name:ident, $get_name_option:ident, $target:ty, $variant:path, $variant_name:expr);* $(;)?) => {
+    ($($as_name:ident, $get_name_option:ident, $target:ty, $variant:path, $variant_name:expr);* $(;)?) => {
         use crate::prelude::CommandData;
         impl CommandData {
             $(
                 /// Attempts to retrieve an optional command option.
                 ///
-                /// Returns `Ok(None)` if the option is not present, 
-                /// `Ok(Some(value))` if present and successfully parsed, 
-                /// or `Err` if the option exists but the type does not match.
-                pub fn $get_name_option(&self, name: &str) -> Result<Option<$target>> {
+                /// Returns `None` if the option is not present, 
+                /// `Some(value)` if present
+                pub fn $get_name_option(&self, name: &str) -> Option<$target> {
                     let option = match self.0.options.iter().find(|opt| opt.name == name) {
                         Some(opt) => opt,
-                        None => return Ok(None),
+                        None => return None,
                     };
 
-                    let val = CommandOptionValue::try_from(option.value.clone())?;
+                    let val = CommandOptionValue::from(&option.value);
 
-                    Ok(Some(val.$as_name()?))
-                }
-
-                /// Retrieves a required command option.
-                ///
-                /// Returns `Ok(value)` if the option is found and successfully parsed.
-                /// Returns `Err(Error::MissingOption)` if the option is missing.
-                pub fn $get_name(&self, name: &str) -> Result<$target> {
-                    self.$get_name_option(name)?.ok_or(Error::MissingOption(name.into()))
+                    val.$as_name()
                 }
             )*
         }
 
         impl CommandOptionValue {
             $(
-                pub fn $as_name(self) -> Result<$target> {
-                    self.try_into()
+                pub fn $as_name(self) -> Option<$target> {
+                    if let $variant(val) = self {
+                        Some(val)
+                    } else {
+                        None
+                    }
                 }
             )*
         }
-
-        $(
-            impl TryInto<$target> for CommandOptionValue {
-                type Error = Error;
-
-                fn try_into(self) -> Result<$target> {
-                    if let $variant(val) = self {
-                        Ok(val)
-                    } else {
-                        Err(Error::InvalidPayload(format!("Not a {}", $variant_name)))
-                    }
-                }
-            }
-        )*
     };
 }
 
-// TODO: aggiungere per ognuno anche:
-// get_user -> Result<Id<UserMarker>>
-// get_attachment -> ...
-// ...
-
 impl_option_accessors!(
-    as_attachment,  get_attachment,  get_attachment_option,  Id<AttachmentMarker>, CommandOptionValue::Attachment, "attachment";
-    as_role,        get_role,        get_role_option,        Id<RoleMarker>,       CommandOptionValue::Role,       "role";
-    as_user,        get_user,        get_user_option,        Id<UserMarker>,       CommandOptionValue::User,       "user";
-    as_channel,     get_channel,     get_channel_option,     Id<ChannelMarker>,    CommandOptionValue::Channel,    "channel";
-    as_mentionable, get_mentionable, get_mentionable_option, Id<GenericMarker>,    CommandOptionValue::Mentionable,"mentionable";
-    as_number,      get_number,      get_number_option,      f64,                  CommandOptionValue::Number,     "number";
-    as_integer,     get_integer,     get_integer_option,     i64,                  CommandOptionValue::Integer,    "integer";
-    as_string,      get_string,      get_string_option,      String,               CommandOptionValue::String,     "string";
-    as_boolean,     get_boolean,     get_boolean_option,     bool,                 CommandOptionValue::Boolean,    "boolean";
+    as_attachment,  get_option_attachment,  Id<AttachmentMarker>, CommandOptionValue::Attachment, "attachment";
+    as_role,        get_option_role,        Id<RoleMarker>,       CommandOptionValue::Role,       "role";
+    as_user,        get_option_user,        Id<UserMarker>,       CommandOptionValue::User,       "user";
+    as_channel,     get_option_channel,     Id<ChannelMarker>,    CommandOptionValue::Channel,    "channel";
+    as_mentionable, get_option_mentionable, Id<GenericMarker>,    CommandOptionValue::Mentionable,"mentionable";
+    as_number,      get_option_number,      f64,                  CommandOptionValue::Number,     "number";
+    as_integer,     get_option_integer,     i64,                  CommandOptionValue::Integer,    "integer";
+    as_string,      get_option_string,      String,               CommandOptionValue::String,     "string";
+    as_boolean,     get_option_boolean,     bool,                 CommandOptionValue::Boolean,    "boolean";
 );

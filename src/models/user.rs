@@ -13,6 +13,12 @@ pub struct User(TwilightUser);
 
 pub struct UserRef<'a>(&'a TwilightUser);
 
+impl<'a> UserRef<'a> {
+    pub fn mention(&self) -> String {
+        format!("<@{}>", self.0.id)
+    }
+}
+
 impl From<TwilightUser> for User {
     fn from(value: TwilightUser) -> Self {
         Self(value)
