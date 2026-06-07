@@ -15,8 +15,6 @@ pub use crate::models::command::{
 pub use crate::models::components::{Component, data::ComponentData};
 pub use crate::models::interaction::Interaction;
 pub use crate::models::modal::{Modal, data::ModalData};
-
-pub use crate::error::{Error, Result};
 pub use crate::traits::resolvable::Resolvable;
 
 pub use crate::bot::Bot;
