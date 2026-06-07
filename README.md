@@ -16,7 +16,7 @@ Add `flarecord` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-flarecord = "0.1.0"
+flarecord = { git = "https://github.com/GitGinocchio/flarecord-rs" }
 
 ```
 
@@ -36,11 +36,18 @@ impl Command for Hello {
     fn description(&self) -> String { "Say hi to someone!".into() }
 
     async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
-        let user = ctx.get_resolved_user("user");
-        let message = user.map(|u| format!("Hello {}!", u.mention()))
-                          .unwrap_or_else(|| "Hello!".to_string());
+        let author = interaction.author().ok_or(Error::Generic("Missing author".into()))?;
+        let user = ctx.data.get_resolved_user("user");
 
-        Ok(CommandResponseBuilder::new().content(message).build())
+        let message = match user {
+            Some(user) => format!("Hello {0}, {1} greeted you", user.mention(), author.mention()),
+            None => format!("Hello {0}!", author.name)
+        };
+        
+        Ok(CommandResponseBuilder::new()
+            .content(message)
+            .ephemeral()
+            .build())
     }
 }
 
@@ -54,6 +61,7 @@ Configure your worker to handle incoming interactions:
 use std::sync::{Arc, LazyLock};
 use flarecord::bot::{Bot, builder::BotBuilder};
 
+// Initialize the Bot instance only when necessary after worker cold starts
 static BOT: LazyLock<Arc<Bot>> = LazyLock::new(|| {
     BotBuilder::new()
         .register_command(Hello)
@@ -100,3 +108,7 @@ Configure these secrets in your Cloudflare Worker dashboard:
 
 * **Syncing**: The `sync_commands_once` method uses an atomic flag (`Ordering::Release`/`Acquire`) to ensure the synchronization only happens once per worker instance lifecycle, preventing unnecessary API overhead.
 * **Efficiency**: Use `OnceLock` or `LazyLock` for your `Bot` instance to leverage the singleton pattern across worker requests.
+
+## Credits
+
+Inspired by [stateless-discord-bot](https://github.com/siketyan/stateless-discord-bot)
