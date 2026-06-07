@@ -48,7 +48,7 @@ impl Command for Hello {
 
         let message = match user {
             Some(user) => format!("Hello {0}, {1} greeted you", user.mention(), author.mention()),
-            None => format!("Hello {0}!", author.name)
+            None => format!("Hello {0}!", author.mention())
         };
         
         Ok(CommandResponseBuilder::new()
