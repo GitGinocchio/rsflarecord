@@ -22,7 +22,7 @@ pub struct DiscordService {
 
 #[allow(unused)]
 impl DiscordService {
-    pub fn get_or_init(client: Client, token: String) -> Arc<DiscordService> {
+    pub (crate) fn get_or_init(client: Client, token: String) -> Arc<DiscordService> {
         DISCORD_SERVICE.get_or_init(|| {
             let service = DiscordService::new(client, token);
             Arc::new(service)
