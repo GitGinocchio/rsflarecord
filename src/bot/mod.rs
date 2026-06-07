@@ -61,6 +61,26 @@ impl Bot {
         Bot::get_global()
     }
 
+    /// Synchronizes the bot's commands with the Discord API using a global `PUT` operation.
+    ///
+    /// This method uses an atomic flag to ensure idempotent behavior:
+    /// - If the flag is already `true`, the operation is skipped to avoid redundant API calls.
+    /// - Otherwise, it retrieves credentials from the environment, initializes the 
+    ///   HTTP client (if necessary), and pushes the current command list to Discord.
+    ///
+    /// # Arguments
+    /// * `env` - The `worker::Env` execution environment, required to access the 
+    ///   Discord BOT_TOKEN and APPLICATION_ID secrets.
+    ///
+    /// # Returns
+    /// * `Ok(true)` - If the synchronization had already occurred (skipped).
+    /// * `Ok(false)` - If the synchronization was successfully performed during this call.
+    ///
+    /// # Errors
+    /// Returns a `worker::Result` error if:
+    /// - Required environment variables are missing.
+    /// - JSON serialization of the commands fails.
+    /// - The HTTP request to Discord fails or returns an error status code.
     pub async fn sync_commands_once(&self, env: &Env) -> worker::Result<bool> {
         if IS_INITIALIZED.load(Ordering::Acquire) {
             worker::console_debug!("Command synchronization not necessary");
@@ -78,10 +98,6 @@ impl Bot {
             .to_string();
 
         if HTTP_CLIENT.get().is_none() {
-            let token = env.secret("DISCORD_BOT_TOKEN")
-                .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
-                .to_string();
-
             let client = self.init_client(&token);
             HTTP_CLIENT.set(Arc::new(client));
         }
