@@ -19,5 +19,7 @@ async fn fetch(
     env: Env,
     _ctx: Context,
 ) -> Result<Response> {
+    BOT.sync_commands_once(&env).await?;
+
     BOT.handle(req, env).await
 }

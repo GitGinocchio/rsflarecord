@@ -1,4 +1,4 @@
-name = "simple"
+name = "example-simple"
 main = "build/index.js"
 compatibility_date = "2026-06-03"
 

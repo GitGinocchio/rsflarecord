@@ -19,6 +19,12 @@ pub enum Error {
     #[error("Invalid interaction: {0}")]
     InvalidInteraction(String),
 
+    #[error("Invalid option name: {0}")]
+    InvalidOptionName(String),
+
+    #[error("Invalid option type: {0}")]
+    InvalidOptionType(String),
+
     #[error("Error resolving value: {0}")]
     ResolveError(String),
 
@@ -33,6 +39,9 @@ pub enum Error {
 
     #[error("Worker error: {0}")]
     WorkerError(#[from] worker::Error),
+
+    #[error("Reqwest error: {0}")]
+    ReqwestError(#[from] reqwest::Error),
 
     #[error("Environment variable '{0}' not found.")]
     EnvironmentVariableNotFound(String),
@@ -54,9 +63,6 @@ pub enum Error {
 
     #[error("Autocomplete not implemented for comand: '{0}'")]
     AutocompleteNotImplemented(String),
-
-    #[error("Error communicating with {0}")]
-    UpstreamError(#[from] reqwest::Error),
 
     #[error("Error communicating with {0}")]
     InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),

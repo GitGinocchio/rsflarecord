@@ -7,7 +7,7 @@ pub mod data;
 
 pub type ComponentType = Box<dyn Component>;
 
-#[async_trait]
+#[async_trait(?Send)]
 pub trait Component: Send + Sync {
     fn id(&self) -> String;
 

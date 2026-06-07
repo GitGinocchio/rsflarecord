@@ -9,7 +9,7 @@ pub mod data;
 
 pub type ModalType = Box<dyn Modal>;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[allow(unused)]
 pub trait Modal: Send + Sync {
     fn id(&self) -> String;

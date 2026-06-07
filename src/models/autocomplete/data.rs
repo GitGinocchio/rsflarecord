@@ -6,20 +6,19 @@ use twilight_model::{
             CommandOptionValue as TwilightCommandOptionValue
         }
     }, 
-    id::{
-        Id, 
+    id::{Id, 
         marker::{
-            CommandMarker, GenericMarker, GuildMarker
+            CommandMarker, 
+            GenericMarker, 
+            GuildMarker
         }
     }
 };
 
-use crate::{error::Error, models::command::option::value::CommandOptionValue};
-
-pub struct CommandData(pub (crate) TwilightCommandData);
-
 #[allow(unused)]
-impl CommandData {
+pub struct AutocompleteData(pub (crate) TwilightCommandData);
+
+impl AutocompleteData {
     /// ID of the guild the command is registered to.
     pub fn guild_id(&self) -> Option<Id<GuildMarker>> {
         self.0.guild_id
@@ -42,14 +41,6 @@ impl CommandData {
         self.0.kind
     }
 
-    pub fn get_option(&self, name: &str) -> Result<Option<CommandOptionValue>, Error> {
-        let Some(option) = self.0.options.iter().find(|opt| opt.name == name) else {
-            return Ok(None);
-        };
-
-        Ok(Some(CommandOptionValue::try_from(option.value.clone())?))
-    }
-
     pub (crate) fn get_subcommand_name(&self) -> Option<&str> {
         self.0.options.iter().find_map(|opt| match opt.value {
             TwilightCommandOptionValue::SubCommand(_) => {
@@ -68,10 +59,10 @@ impl CommandData {
         })
     }
 
-    pub (crate) fn get_inner(&self) -> Option<CommandData> {
+    pub (crate) fn get_inner(&self) -> Option<AutocompleteData> {
         self.0.options.iter().find_map(|opt| {
             if let TwilightCommandOptionValue::SubCommand(sub_options) = &opt.value {
-                Some(CommandData(TwilightCommandData {
+                Some(AutocompleteData(TwilightCommandData {
                     name: opt.name.clone(),
                     options: sub_options.clone(),
                     resolved: self.0.resolved.clone(),
@@ -87,7 +78,7 @@ impl CommandData {
     }
 }
 
-impl From<TwilightCommandData> for CommandData {
+impl From<TwilightCommandData> for AutocompleteData {
     fn from(value: TwilightCommandData) -> Self {
         Self(value)
     }

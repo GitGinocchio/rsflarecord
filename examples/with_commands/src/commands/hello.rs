@@ -1,10 +1,10 @@
-use flarecord::{models::command::context::CommandContext, prelude::*};
+use flarecord::prelude::*;
 use flarecord::error::Error;
 use async_trait::async_trait;
 
 pub struct Hello;
 
-#[async_trait]
+#[async_trait(?Send)]
 impl Command for Hello {
     fn name(&self) -> String {
         "hello".into()
@@ -15,20 +15,35 @@ impl Command for Hello {
     }
 
     fn options(&self) -> CommandOptions {
-        Some(vec![
-            CommandOption::user("user", "the user to greet")
-        ])
+        let user_option = CommandOptionBuilder::user("user", "the user to greet")
+            .autocomplete()
+            .build()?;
+       
+       
+        Ok(Some(vec![user_option]))
+    }
+
+    async fn autocomplete(&self, _interaction: Interaction, _ctx: AutocompleteContext) -> AutocompleteResult {
+        let mut response = AutocompleteResponse::new();
+        response.add("test_name", "test_value", None);
+
+        Ok(response)
     }
 
     async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
-        let user_id = ctx.data.get_user_option("user")?.ok_or(Error::MissingOption("user".into()))?;
-        let user = ctx.discord.fetch_user(&user_id).await?;
-        //let user = user_id.resolve().await?;
-        
         let author = interaction.author().ok_or(Error::Generic("Missing author".into()))?;
+        let user = match ctx.data.get_user_option("user")? {
+            Some(user_id) => Some(ctx.discord.fetch_user(&user_id).await?),
+            None => None
+        };
+
+        let message = match user {
+            Some(user) => format!("Hello {0}, {1} greeted you", user.name, author.name),
+            None => format!("Hello {0}!", author.name)
+        };
         
         Ok(CommandResponseBuilder::new()
-            .content(format!("Hello {0}, {1} greeted you", user.name, author.name))
+            .content(message)
             .ephemeral()
             .build())
     }

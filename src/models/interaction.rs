@@ -5,17 +5,17 @@ use twilight_model::{application::interaction::{
 use worker::{Env, Response};
 
 use crate::{
-    bot::Bot, 
+    bot::{Bot, HTTP_CLIENT}, 
     error::{Error, Result}, 
     models::{
-        autocomplete::dispatcher::AutocompleteDispatcher, 
+        autocomplete::{context::AutocompleteContext, data::AutocompleteData, dispatcher::AutocompleteDispatcher}, 
         command::{
             context::CommandContext, 
             data::CommandData, 
             dispatcher::CommandDispatcher
         }, 
         components::data::ComponentData, 
-        modal::data::ModalData, user::{UserRef}
+        modal::data::ModalData, user::UserRef
     }, 
     services::discord::DiscordService
 };
@@ -57,12 +57,8 @@ impl Interaction {
             return Err(Error::CommandNotFound(format!("{}", data.0.name)))
         };
 
-        let token = env.secret("DISCORD_BOT_TOKEN")
-            .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
-            .to_string();
-
-        let client = DiscordService::build_client(&token)?;
-        let discord_service = DiscordService::get_or_init(client, token);
+        let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
+        let discord_service = DiscordService::get_or_init(http_client.clone());
 
         let ctx = CommandContext::new(bot.clone(), env, data, discord_service);
 
@@ -79,7 +75,7 @@ impl Interaction {
 
     async fn handle_autocomplete(self, env: Env) -> Result<Response> {
         let mut data = match self.data.as_ref() {
-            Some(InteractionData::ApplicationCommand(data)) => CommandData::from(*data.clone()),
+            Some(InteractionData::ApplicationCommand(data)) => AutocompleteData::from(*data.clone()),
             Some(_) | None => return Err(Error::InvalidPayload("Missing or invalid command data".into()))
         };
 
@@ -88,7 +84,12 @@ impl Interaction {
             return Err(Error::CommandNotFound(format!("{}", data.0.name)))
         };
 
-        match AutocompleteDispatcher::dispatch(command, self, data, env).await {
+        let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
+        let discord_service = DiscordService::get_or_init(http_client.clone());
+
+        let ctx = AutocompleteContext::new(bot.clone(), env, data, discord_service);
+
+        match AutocompleteDispatcher::dispatch(command, self, ctx).await {
             Err(e) => Ok(e.as_response()?),
             Ok(response) => {
                 let value = serde_json::to_value::<InteractionResponse>(response.into())

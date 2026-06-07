@@ -1,7 +1,11 @@
-pub use crate::models::autocomplete::response::{AutocompleteResponse, AutocompleteValue};
+pub use crate::models::autocomplete::{
+    response::AutocompleteResponse,
+    context::AutocompleteContext
+};
 pub use crate::models::command::{
     response::{CommandResponse, builder::CommandResponseBuilder},
-    option::CommandOption,
+    option::{CommandOption, builder::CommandOptionBuilder},
+    context::CommandContext,
     CommandOptions,
     Command, 
     CommandResult,

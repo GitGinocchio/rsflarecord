@@ -2,8 +2,7 @@ use std::collections::HashMap;
 
 use twilight_model::{
     application::command::{
-        CommandOptionChoice, 
-        CommandOptionChoiceValue
+        CommandOptionChoice,
     }, 
     http::interaction::{
         InteractionResponse, 
@@ -12,12 +11,12 @@ use twilight_model::{
     }
 };
 
+use crate::models::autocomplete::value::AutocompleteValue;
+
 pub mod builder;
 
-pub type AutocompleteValue = CommandOptionChoiceValue;    
-
 pub struct AutocompleteResponse {
-    pub choices: Vec<CommandOptionChoice>
+    choices: Vec<CommandOptionChoice>
 }
 
 impl AutocompleteResponse {
@@ -25,11 +24,11 @@ impl AutocompleteResponse {
         Self { choices: Vec::new() }
     }
 
-    pub fn add(&mut self, name: impl Into<String>, value: AutocompleteValue, locals: Option<HashMap<String, String>>) { 
+    pub fn add(&mut self, name: impl Into<String>, value: impl Into<AutocompleteValue>, locals: Option<HashMap<String, String>>) { 
         self.choices.push(CommandOptionChoice {
             name: name.into(),
             name_localizations: locals,
-            value: value
+            value: value.into().into()
         });
     }
 }

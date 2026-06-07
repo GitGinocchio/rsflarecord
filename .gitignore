@@ -17,5 +17,10 @@ target/
 #.idea/
 
 # Added by cargo
-
 /target
+
+# Added by ggshield
+.cache_ggshield
+
+**/*.env.*
+!**/*.env.*.example

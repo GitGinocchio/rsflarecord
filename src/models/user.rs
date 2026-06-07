@@ -41,7 +41,7 @@ impl<'a> Deref for UserRef<'a> {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl Resolvable<User> for Id<UserMarker> {
     async fn resolve(&self) -> Result<User> {
         let discord = DISCORD_SERVICE
