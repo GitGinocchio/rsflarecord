@@ -16,10 +16,7 @@ use crate::models::command::CommandType;
 pub (crate) struct SerializableCommand<'a>(pub &'a CommandType);
 
 impl<'a> Serialize for SerializableCommand<'a> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
         let mut all_options: Vec<TwilightCommandOption> = self.0.options()
             .map_err(|e| SerdeError::custom(format!("Error parsing options: {e}")))?
             .unwrap_or_default()
