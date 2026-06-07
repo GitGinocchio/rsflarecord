@@ -66,7 +66,13 @@ Configure your worker to handle incoming interactions:
 
 ```rust
 use std::sync::{Arc, LazyLock};
-use flarecord::bot::{Bot, builder::BotBuilder};
+use worker::*;
+
+// Load Flarecord core components (Traits, Builders, Context)
+use flarecord::prelude::*;
+
+mod commands;
+use commands::hello::Hello;
 
 // Initialize the Bot instance only when necessary after worker cold starts
 static BOT: LazyLock<Arc<Bot>> = LazyLock::new(|| {
