@@ -43,14 +43,15 @@ macro_rules! impl_option_accessors {
         use crate::prelude::CommandData;
         impl CommandData {
             $(
-                pub fn $get_name_option(&self, name: &str) -> Result<$target> {
-                    let option = self.0.options.iter()
-                        .find(|opt| opt.name == name)
-                        .ok_or_else(|| Error::OptionNotFound(name.into()))?;
+                pub fn $get_name_option(&self, name: &str) -> Result<Option<$target>> {
+                    let option = match self.0.options.iter().find(|opt| opt.name == name) {
+                        Some(opt) => opt,
+                        None => return Ok(None),
+                    };
 
                     let val = CommandOptionValue::try_from(option.value.clone())?;
 
-                    val.$as_name()
+                    Ok(Some(val.$as_name()?))
                 }
             )*
         }
@@ -78,6 +79,11 @@ macro_rules! impl_option_accessors {
         )*
     };
 }
+
+// TODO: aggiungere per ognuno anche:
+// get_user -> Result<Id<UserMarker>>
+// get_attachment -> ...
+// ...
 
 impl_option_accessors!(
     as_attachment,  get_attachment_option,  Id<AttachmentMarker>, CommandOptionValue::Attachment, "attachment";

@@ -1,4 +1,5 @@
 use flarecord::{models::command::context::CommandContext, prelude::*};
+use flarecord::error::Error;
 use async_trait::async_trait;
 
 pub struct Hello;
@@ -20,15 +21,13 @@ impl Command for Hello {
     }
 
     async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
-        let _user_id = ctx.data.get_user_option("user")?;
-
-        let message = match interaction.author() {
-            Some(author) => format!("Hello {0} from {0}", author.name),
-            None => format!("Hello!")
-        };
+        let user_id = ctx.data.get_user_option("user")?.ok_or(Error::MissingOption("user".into()))?;
+        let user = ctx.discord.fetch_user(&user_id).await?;
+        
+        let author = interaction.author().ok_or(Error::Generic("Missing author".into()))?;
         
         Ok(CommandResponseBuilder::new()
-            .content(message)
+            .content(format!("Hello {0}, {1} greeted you", user.name, author.name))
             .ephemeral()
             .build())
     }

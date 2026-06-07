@@ -10,6 +10,9 @@ pub enum Error {
     #[error("Header '{0}' not found.")]
     MissingHeader(String),
 
+    #[error("Option '{0}' not found.")]
+    MissingOption(String),
+
     #[error("Invalid payload: {0}")]
     InvalidPayload(String),
 
@@ -53,7 +56,10 @@ pub enum Error {
     AutocompleteNotImplemented(String),
 
     #[error("Error communicating with {0}")]
-    UpstreamError(String),
+    UpstreamError(#[from] reqwest::Error),
+
+    #[error("Error communicating with {0}")]
+    InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
 
     #[error("Error: {0}")]
     Generic(String),

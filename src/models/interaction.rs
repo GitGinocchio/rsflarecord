@@ -4,14 +4,27 @@ use twilight_model::{application::interaction::{
 }, http::interaction::{InteractionResponse, InteractionResponseType}};
 use worker::{Env, Response};
 
-use crate::{bot::Bot, error::{Error, Result}, models::{autocomplete::dispatcher::AutocompleteDispatcher, command::{context::CommandContext, data::CommandData, dispatcher::CommandDispatcher}, components::data::ComponentData, modal::data::ModalData}};
-
+use crate::{
+    bot::Bot, 
+    error::{Error, Result}, 
+    models::{
+        autocomplete::dispatcher::AutocompleteDispatcher, 
+        command::{
+            context::CommandContext, 
+            data::CommandData, 
+            dispatcher::CommandDispatcher
+        }, 
+        components::data::ComponentData, 
+        modal::data::ModalData, user::{UserRef}
+    }, 
+    services::discord::DiscordService
+};
 
 pub struct Interaction(TwilightInteraction);
 
 #[allow(unused)]
 impl Interaction {
-    pub async fn perform(self, env: Env) -> Result<Response> {
+    pub (crate) async fn perform(self, env: Env) -> Result<Response> {
         match self.kind {
             InteractionType::ApplicationCommandAutocomplete => self.handle_autocomplete(env).await,
             InteractionType::ApplicationCommand => self.handle_command(env).await,
@@ -44,7 +57,14 @@ impl Interaction {
             return Err(Error::CommandNotFound(format!("{}", data.0.name)))
         };
 
-        let ctx = CommandContext::new(bot.clone(), env, data);
+        let token = env.secret("DISCORD_BOT_TOKEN")
+            .map_err(|e| Error::EnvironmentVariableNotFound(format!("{e}")))?
+            .to_string();
+
+        let client = DiscordService::build_client(&token)?;
+        let discord_service = DiscordService::get_or_init(client, token);
+
+        let ctx = CommandContext::new(bot.clone(), env, data, discord_service);
 
         match CommandDispatcher::dispatch(command, self, ctx).await {
             Err(e) => Ok(e.as_response()?),
@@ -108,6 +128,10 @@ impl Interaction {
         };
 
         Ok(Response::empty()?)
+    }
+
+    pub fn author(&self) -> Option<UserRef<'_>> {
+        self.0.author().map(|a| UserRef::from(a))
     }
 }
 
