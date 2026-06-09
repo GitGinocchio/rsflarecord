@@ -7,7 +7,9 @@ use twilight_model::{
                 CommandOptionValue as TwilightCommandOptionValue
             }
         }
-    }, channel::{Attachment, Message}, guild::Role, id::{
+    }, 
+    channel::Message, 
+    guild::Role, id::{
         Id, 
         marker::{
             CommandMarker, GenericMarker, GuildMarker
@@ -15,7 +17,7 @@ use twilight_model::{
     }
 };
 
-use crate::{models::{command::option::value::CommandOptionValue, user::UserRef}};
+use crate::models::{attachment::incoming::IncomingAttachmentRef, command::option::value::CommandOptionValue, user::UserRef};
 
 pub struct CommandData(pub (crate) TwilightCommandData);
 
@@ -79,9 +81,9 @@ impl CommandData {
     }
 
     /// Retrieves a resolved attachment by the option name.
-    pub fn get_resolved_attachment<'a>(&'a self, name: &str) -> Option<&'a Attachment> {
+    pub fn get_resolved_attachment<'a>(&'a self, name: &str) -> Option<IncomingAttachmentRef<'a>> {
         let id = self.get_option_attachment(name)?;
-        self.0.resolved.as_ref()?.attachments.get(&id)
+        self.0.resolved.as_ref()?.attachments.get(&id).map(|a| a.into())
     }
 
     pub fn get_option(&self, name: &str) -> Option<CommandOptionValue> {

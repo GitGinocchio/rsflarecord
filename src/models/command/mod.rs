@@ -6,7 +6,7 @@ use twilight_model::{application::interaction::InteractionContextType, guild::Pe
 use crate::{
     error::{Error, Result}, 
     models::{
-        autocomplete::{context::AutocompleteContext, interaction::AutocompleteInteraction, response::AutocompleteResponse}, 
+        autocomplete::{AutocompleteResult, context::AutocompleteContext, interaction::AutocompleteInteraction}, 
         command::{
             context::CommandContext, interaction::CommandInteraction, option::CommandOption, response::CommandResponse
         }
@@ -31,7 +31,6 @@ pub type SubcommandType = Box<dyn Subcommand>;
 pub type SubcommandGroupType = Box<dyn SubcommandGroup>;
 
 pub type CommandResult = Result<CommandResponse>;
-pub type AutocompleteResult = Result<AutocompleteResponse>;
 
 #[async_trait(?Send)]
 #[allow(unused)]

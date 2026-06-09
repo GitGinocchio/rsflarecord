@@ -1,8 +1,12 @@
 use crate::{
     error::Error, 
-    models::{
-        autocomplete::{context::AutocompleteContext, interaction::AutocompleteInteraction}, 
-        command::{AutocompleteResult, Command, SubcommandGroup}
+    models::{ 
+        autocomplete::{
+            AutocompleteResult, 
+            context::AutocompleteContext,
+            interaction::AutocompleteInteraction
+        }, 
+        command::{Command, SubcommandGroup}
     }
 };
 

@@ -1,18 +1,18 @@
 pub use crate::models::autocomplete::{
-    response::AutocompleteResponse,
+    response::{AutocompleteResponse, builder::AutocompleteResponseBuilder},
     context::AutocompleteContext,
     interaction::AutocompleteInteraction,
-    data::AutocompleteData
+    data::AutocompleteData,
+    AutocompleteResult
 };
 pub use crate::models::command::{
     response::{CommandResponse, builder::CommandResponseBuilder},
     option::{CommandOption, value::CommandOptionValue, builder::CommandOptionBuilder},
     context::CommandContext,
+    data::CommandData,
     CommandOptions,
-    Command, 
     CommandResult,
-    AutocompleteResult,
-    data::CommandData
+    Command
 };
 pub use crate::models::attachment::{builder::AttachmentBuilder, outgoing::Attachment};
 pub use crate::models::components::{Component, data::ComponentData};
