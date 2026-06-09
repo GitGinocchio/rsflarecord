@@ -1,9 +1,9 @@
 use std::ops::{Deref, DerefMut};
 
-use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionData, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}, id::{Id, marker::UserMarker}};
+use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}, id::{Id, marker::UserMarker}};
 use worker::{Env, Response};
 
-use crate::{bot::{Bot, HTTP_CLIENT}, error::{Error, Result}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::data::ComponentData, modal::{context::ModalContext, interaction::ModalInteraction}, user::UserRef}, services::discord::DiscordService};
+use crate::{bot::{Bot, HTTP_CLIENT}, error::{Error, Result}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modal::{context::ModalContext, interaction::ModalInteraction}, user::UserRef}, services::discord::DiscordService};
 
 #[allow(unused)]
 pub (crate) struct Interaction(TwilightInteraction);
@@ -14,7 +14,7 @@ impl Interaction {
         match self.kind {
             InteractionType::ApplicationCommandAutocomplete => self.handle_autocomplete(env).await,
             InteractionType::ApplicationCommand => self.handle_command(env).await,
-            InteractionType::MessageComponent => self.handle_component().await,
+            InteractionType::MessageComponent => self.handle_component(env).await,
             InteractionType::ModalSubmit => self.handle_modal_submit(env).await,
             InteractionType::Ping => self.handle_ping().await,
             _ => Ok(Response::empty()?)
@@ -98,18 +98,21 @@ impl Interaction {
         }
     }
 
-    async fn handle_component(&self) -> Result<Response> {
-        let mut data = match self.data.as_ref() {
-            Some(InteractionData::MessageComponent(data)) => ComponentData::from(*data.clone()),
-            Some(_) | None => return Err(Error::InvalidPayload("Missing or invalid modal data".into()))
-        };
+    async fn handle_component(self, env: Env) -> Result<Response> {
+        let component_interaction = ComponentInteraction::try_from(self)?;
 
         let bot = Bot::get_global();
-        let Some(component) = bot.components.get(&data.custom_id) else {
-            return Err(Error::ComponentNotFound(format!("{}", data.custom_id)))
+        let Some(component) = bot.components.get(&component_interaction.data.custom_id) else {
+            return Err(Error::ComponentNotFound(format!("{}", component_interaction.data.custom_id)))
         };
 
-        Ok(Response::empty()?)
+        let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
+        let discord_service = DiscordService::get_or_init(http_client.clone());
+        let ctx = ComponentContext::new(bot.clone(), env, discord_service);
+
+        match component.handle(component_interaction, ctx).await? {
+            () => Ok(Response::empty()?)
+        }
     }
 
     pub fn author(&self) -> Option<UserRef<'_>> {
