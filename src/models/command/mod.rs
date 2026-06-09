@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
-use twilight_model::{application::interaction::InteractionContextType, guild::Permissions, oauth::ApplicationIntegrationType};
+use twilight_model::{application::interaction::InteractionContextType, guild::Permissions, id::{Id, marker::GuildMarker}, oauth::ApplicationIntegrationType};
 
 use crate::{
     error::{Error, Result}, 
@@ -35,9 +37,16 @@ pub type AutocompleteResult = Result<AutocompleteResponse>;
 #[allow(unused)]
 pub trait Command: Send + Sync {
     fn name(&self) -> String;
+    fn name_localizations(&self) -> Option<HashMap<String, String>> { None }
+    
     fn description(&self) -> String;
+    fn description_localizations(&self) -> Option<HashMap<String, String>> { None }
+    
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
+    fn guild_id(&self) -> Option<Id<GuildMarker>> { None }
+    fn nsfw(&self) -> Option<bool> { None }
+    
     fn interaction_contexts(&self) -> Vec<InteractionContextType> { vec![] }
     fn integration_types(&self) -> Vec<ApplicationIntegrationType> { vec![] }
 
@@ -59,7 +68,11 @@ pub trait Command: Send + Sync {
 #[allow(unused)]
 pub trait Subcommand: Send + Sync {
     fn name(&self) -> String;
+    fn name_localizations(&self) -> Option<HashMap<String, String>> { None }
+    
     fn description(&self) -> String;
+    fn description_localizations(&self) -> Option<HashMap<String, String>> { None }
+
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
     fn options(&self) -> CommandOptions { Ok(None) }
@@ -75,7 +88,11 @@ pub trait Subcommand: Send + Sync {
 #[allow(unused)]
 pub trait SubcommandGroup: Send + Sync {
     fn name(&self) -> String;
+    fn name_localizations(&self) -> Option<HashMap<String, String>> { None }
+    
     fn description(&self) -> String;
+    fn description_localizations(&self) -> Option<HashMap<String, String>> { None }
+
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }

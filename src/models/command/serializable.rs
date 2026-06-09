@@ -10,8 +10,45 @@ use twilight_model::{
 };
 use serde::ser::Error as SerdeError;
 
-use crate::models::command::CommandType;
+use crate::models::command::{CommandType, Subcommand};
 
+fn serialize_subcommands<S>(
+    subcommands: &Vec<Box<dyn Subcommand>>
+) -> Result<Vec<TwilightCommandOption>, S::Error> where S: Serializer {
+    let mut serialized: Vec<TwilightCommandOption> = Vec::new();
+
+    for subcommand in subcommands.iter() {
+        let options: Vec<TwilightCommandOption> = subcommand.options()
+            .map_err(|e| SerdeError::custom(format!("Error parsing options: {e}")))?
+            .unwrap_or_default()
+            .iter()
+            .map(|opt| TwilightCommandOption::from(opt))
+            .collect();
+
+        let autocomplete = options
+            .iter()
+            .any(|o| o.autocomplete.map(|_v| true).unwrap_or(false));
+
+        serialized.push(TwilightCommandOption {
+            kind: CommandOptionType::SubCommand,
+            name: subcommand.name(),
+            description: subcommand.description(),
+            options: if options.len() > 0 { Some(options) } else { None },
+            autocomplete: if autocomplete { Some(true) } else { None },
+            channel_types: None,
+            choices: None,
+            name_localizations: subcommand.name_localizations(),
+            description_localizations: subcommand.description_localizations(),
+            max_length: None,
+            max_value: None,
+            min_length: None,
+            min_value: None,
+            required: None
+        });
+    }
+    
+    Ok(serialized)
+}
 
 pub (crate) struct SerializableCommand<'a>(pub &'a CommandType);
 
@@ -24,34 +61,29 @@ impl<'a> Serialize for SerializableCommand<'a> {
             .map(|opt| TwilightCommandOption::from(opt))
             .collect();
 
-        let subs = self.0.subcommands();
-        if !subs.is_empty() {
-            for sub in subs.iter() {
-                let options: Vec<TwilightCommandOption> = sub.options()
-                    .map_err(|e| SerdeError::custom(format!("Error parsing options: {e}")))?
-                    .unwrap_or_default()
-                    .iter()
-                    .map(|opt| TwilightCommandOption::from(opt))
-                    .collect();
-
-                all_options.push(TwilightCommandOption {
-                    kind: CommandOptionType::SubCommand,
-                    name: sub.name(),
-                    description: sub.description(),
-                    options: if options.len() > 0 { Some(options) } else { None },
-                    autocomplete: Some(true),
-                    channel_types: None,
-                    choices: None,
-                    description_localizations: None,
-                    max_length: None,
-                    max_value: None,
-                    min_length: None,
-                    min_value: None,
-                    name_localizations: None,
-                    required: None
-                });
-            }
+        let groups = self.0.groups();
+        for group in groups.iter() {
+            let subcommands = group.subcommands();
+            all_options.push(TwilightCommandOption {
+                kind: CommandOptionType::SubCommandGroup,
+                name: group.name(),
+                description: group.description(),
+                options: Some(serialize_subcommands::<S>(&subcommands)?),
+                autocomplete: None,
+                channel_types: None,
+                choices: None,
+                name_localizations: group.name_localizations(),
+                description_localizations: group.description_localizations(),
+                max_length: None,
+                max_value: None,
+                min_length: None,
+                min_value: None,
+                required: None
+            })
         }
+
+        let subcommands = self.0.subcommands();
+        all_options.append(&mut serialize_subcommands::<S>(&subcommands)?);
 
         let itypes = self.0.integration_types();
         let icontexts = self.0.interaction_contexts();
@@ -63,12 +95,12 @@ impl<'a> Serialize for SerializableCommand<'a> {
             kind: TwilightCommandType::ChatInput,
             application_id: None,
             default_member_permissions: self.0.default_member_permissions(),
-            guild_id: None,
+            guild_id: self.0.guild_id(),
             id: None,
-            nsfw: None,
+            nsfw: self.0.nsfw(),
             version: Id::new(1),
-            name_localizations: None,
-            description_localizations: None,
+            name_localizations: self.0.name_localizations(),
+            description_localizations: self.0.description_localizations(),
             contexts: if icontexts.is_empty() {
                 None
             } else {
