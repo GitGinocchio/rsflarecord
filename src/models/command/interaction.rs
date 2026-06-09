@@ -1,4 +1,34 @@
-use twilight_model::{application::{interaction::{InteractionContextType, InteractionData, InteractionPartialGuild}, monetization::Entitlement}, channel::Channel, guild::{PartialMember, Permissions}, id::{AnonymizableId, Id, marker::{ApplicationMarker, ChannelMarker, GuildMarker, InteractionMarker, UserMarker}}, oauth::ApplicationIntegrationMap};
+use twilight_model::{
+    application::{
+        interaction::{
+            InteractionContextType, 
+            InteractionData, 
+            InteractionPartialGuild, 
+            application_command::{
+                CommandData as TwilightCommandData, 
+                CommandOptionValue as TwilightCommandOptionValue,
+            }
+        }, 
+        monetization::Entitlement
+    }, 
+    channel::Channel, 
+    guild::{
+        PartialMember, 
+        Permissions
+    }, 
+    id::{
+        AnonymizableId, 
+        Id,
+        marker::{
+            ApplicationMarker, 
+            ChannelMarker, 
+            GuildMarker, 
+            InteractionMarker, 
+            UserMarker
+        }
+    }, 
+    oauth::ApplicationIntegrationMap
+};
 
 use crate::{error::Error, models::{command::data::CommandData, interaction::Interaction, user::{User, UserRef}}};
 
@@ -28,9 +58,35 @@ pub struct CommandInteraction {
 }
 
 impl CommandInteraction {
-    pub (crate) fn with_inner_data(mut self, inner_data: CommandData) -> Self {
-        self.data = inner_data;
-        self
+    pub (crate) fn with_inner_data(self) -> Option<Self> {
+        let resolved = self.data.0.resolved;
+        let guild_id = self.data.0.guild_id;
+        let id = self.data.0.id;
+        let kind = self.data.0.kind;
+        let target_id = self.data.0.target_id;
+        
+        let new_data = self.data.0.options.into_iter().find_map(|opt| {
+            match opt.value {
+                TwilightCommandOptionValue::SubCommand(data) | 
+                TwilightCommandOptionValue::SubCommandGroup(data) => {
+                    Some(CommandData(TwilightCommandData {
+                        name: opt.name,
+                        options: data, // Questo è già un Vec, lo spostiamo direttamente
+                        resolved: resolved.clone(), // Vedi nota sotto
+                        guild_id,
+                        id,
+                        kind,
+                        target_id
+                    }))
+                },
+                _ => None
+            }
+        });
+
+        match new_data {
+            Some(inner) => Some(Self { data: inner, ..self }),
+            None => None,
+        }
     }
 
     pub fn author<'a>(&'a self) -> Option<UserRef<'a>> {

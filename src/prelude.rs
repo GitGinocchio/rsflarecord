@@ -1,13 +1,14 @@
 pub use crate::models::autocomplete::{
     response::{AutocompleteResponse, builder::AutocompleteResponseBuilder},
-    context::AutocompleteContext,
     interaction::AutocompleteInteraction,
+    context::AutocompleteContext,
     data::AutocompleteData,
     AutocompleteResult
 };
 pub use crate::models::command::{
     response::{CommandResponse, builder::CommandResponseBuilder},
     option::{CommandOption, value::CommandOptionValue, builder::CommandOptionBuilder},
+    interaction::CommandInteraction,
     context::CommandContext,
     data::CommandData,
     CommandOptions,

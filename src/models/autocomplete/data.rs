@@ -58,24 +58,6 @@ impl AutocompleteData {
             _ => None,
         })
     }
-
-    pub (crate) fn get_inner(&self) -> Option<AutocompleteData> {
-        self.0.options.iter().find_map(|opt| {
-            if let TwilightCommandOptionValue::SubCommand(sub_options) = &opt.value {
-                Some(AutocompleteData(TwilightCommandData {
-                    name: opt.name.clone(),
-                    options: sub_options.clone(),
-                    resolved: self.0.resolved.clone(),
-                    guild_id: self.0.guild_id,
-                    id: self.0.id,
-                    kind: self.0.kind,
-                    target_id: self.0.target_id
-                }))
-            } else {
-                None
-            }
-        })
-    }
 }
 
 impl From<TwilightCommandData> for AutocompleteData {

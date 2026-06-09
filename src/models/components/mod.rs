@@ -5,6 +5,7 @@ use crate::models::components::interaction::ComponentInteraction;
 use crate::error::Result;
 
 pub (crate) mod dispatcher;
+pub mod response;
 pub mod context;
 pub mod interaction;
 pub mod data;

@@ -1,4 +1,3 @@
-use flarecord::models::command::interaction::CommandInteraction;
 use flarecord::prelude::*;
 use flarecord::error::Error;
 use async_trait::async_trait;
