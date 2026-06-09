@@ -1,9 +1,9 @@
 use std::ops::{Deref, DerefMut};
 
-use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}, id::{Id, marker::UserMarker}};
+use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}};
 use worker::{Env, Response};
 
-use crate::{bot::{Bot, HTTP_CLIENT}, error::{Error, Result}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modal::{context::ModalContext, interaction::ModalInteraction}, user::UserRef}, services::discord::DiscordService};
+use crate::{bot::{Bot, HTTP_CLIENT}, error::{Error, Result}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modal::{context::ModalContext, interaction::ModalInteraction}}, services::discord::DiscordService};
 
 #[allow(unused)]
 pub (crate) struct Interaction(TwilightInteraction);
@@ -113,14 +113,6 @@ impl Interaction {
         match component.handle(component_interaction, ctx).await? {
             () => Ok(Response::empty()?)
         }
-    }
-
-    pub fn author(&self) -> Option<UserRef<'_>> {
-        self.0.author().map(|a| a.into())
-    }
-
-    pub fn author_id(&self) -> Option<Id<UserMarker>> {
-        self.0.author_id()
     }
 }
 
