@@ -6,15 +6,13 @@ use crate::{
     services::discord::DiscordService
 };
 
-
-
-pub struct CommandContext {
+pub struct ComponentContext {
     pub bot: Arc<Bot>,
     pub env: Env,
     pub discord: Arc<DiscordService>
 }
 
-impl CommandContext {
+impl ComponentContext {
     pub fn new(bot: Arc<Bot>, env: Env, discord: Arc<DiscordService>) -> Self {
         Self {
             bot: bot, 

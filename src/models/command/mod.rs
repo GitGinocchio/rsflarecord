@@ -1,22 +1,23 @@
 use async_trait::async_trait;
-use twilight_model::guild::Permissions;
+use twilight_model::{application::interaction::InteractionContextType, guild::Permissions, oauth::ApplicationIntegrationType};
 
 use crate::{
     error::{Error, Result}, 
     models::{
-        autocomplete::{context::AutocompleteContext, response::AutocompleteResponse}, 
+        autocomplete::{context::AutocompleteContext, interaction::AutocompleteInteraction, response::AutocompleteResponse}, 
         command::{
-            context::CommandContext, option::CommandOption, response::CommandResponse
-        }, 
-        interaction::Interaction,
+            context::CommandContext, interaction::CommandInteraction, option::CommandOption, response::CommandResponse
+        }
     }
 };
+
+pub (crate) mod dispatcher;
+pub (crate) mod serializable;
 
 pub mod data;
 pub mod response;
 pub mod option;
-pub mod dispatcher;
-pub mod serializable;
+pub mod interaction;
 pub mod context;
 
 
@@ -37,16 +38,19 @@ pub trait Command: Send + Sync {
     fn description(&self) -> String;
     fn default_member_permissions(&self) -> Option<Permissions> { None }
 
+    fn interaction_contexts(&self) -> Vec<InteractionContextType> { vec![] }
+    fn integration_types(&self) -> Vec<ApplicationIntegrationType> { vec![] }
+
     fn subcommands(&self) -> Vec<SubcommandType> { vec![] }
     fn groups(&self) -> Vec<SubcommandGroupType> { vec![] }
 
     fn options(&self) -> CommandOptions { Ok(None) }
 
-    async fn autocomplete(&self, interaction: Interaction, ctx: AutocompleteContext) -> AutocompleteResult {
+    async fn autocomplete(&self, interaction: AutocompleteInteraction, ctx: AutocompleteContext) -> AutocompleteResult {
         Err(Error::AutocompleteNotImplemented(self.name()))
     }
 
-    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
+    async fn execute(&self, interaction: CommandInteraction, ctx: CommandContext) -> CommandResult {
         Err(Error::ExecuteNotImplemented(self.name()))
     }
 }
@@ -60,11 +64,11 @@ pub trait Subcommand: Send + Sync {
 
     fn options(&self) -> CommandOptions { Ok(None) }
 
-    async fn autocomplete(&self, interaction: Interaction, ctx: AutocompleteContext) -> AutocompleteResult {
+    async fn autocomplete(&self, interaction: AutocompleteInteraction, ctx: AutocompleteContext) -> AutocompleteResult {
         Err(Error::AutocompleteNotImplemented(self.name()))
     }
 
-    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult;
+    async fn execute(&self, interaction: CommandInteraction, ctx: CommandContext) -> CommandResult;
 }
 
 #[async_trait(?Send)]
@@ -98,13 +102,13 @@ impl<F, Fut> CommandHandler<F, Fut> {
 #[async_trait(?Send)]
 impl<F, Fut> Command for CommandHandler<F, Fut> 
 where 
-    F: Fn(Interaction, CommandContext) -> Fut + Send + Sync + 'static,
+    F: Fn(CommandInteraction, CommandContext) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = CommandResult> + Send + Sync + 'static,
 {
     fn name(&self) -> String { self.name.clone() }
     fn description(&self) -> String { self.description.clone() }
 
-    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
+    async fn execute(&self, interaction: CommandInteraction, ctx: CommandContext) -> CommandResult {
         (self.handler)(interaction, ctx).await
     }
 }

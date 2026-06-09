@@ -8,13 +8,13 @@ use crate::{
 
 
 
-pub struct CommandContext {
+pub struct ModalContext {
     pub bot: Arc<Bot>,
     pub env: Env,
     pub discord: Arc<DiscordService>
 }
 
-impl CommandContext {
+impl ModalContext {
     pub fn new(bot: Arc<Bot>, env: Env, discord: Arc<DiscordService>) -> Self {
         Self {
             bot: bot, 

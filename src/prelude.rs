@@ -1,10 +1,12 @@
 pub use crate::models::autocomplete::{
     response::AutocompleteResponse,
-    context::AutocompleteContext
+    context::AutocompleteContext,
+    interaction::AutocompleteInteraction,
+    data::AutocompleteData
 };
 pub use crate::models::command::{
     response::{CommandResponse, builder::CommandResponseBuilder},
-    option::{CommandOption, builder::CommandOptionBuilder},
+    option::{CommandOption, value::CommandOptionValue, builder::CommandOptionBuilder},
     context::CommandContext,
     CommandOptions,
     Command, 
@@ -12,9 +14,10 @@ pub use crate::models::command::{
     AutocompleteResult,
     data::CommandData
 };
+pub use crate::models::attachment::{builder::AttachmentBuilder, outgoing::Attachment};
 pub use crate::models::components::{Component, data::ComponentData};
-pub use crate::models::interaction::Interaction;
 pub use crate::models::modal::{Modal, data::ModalData};
+pub use crate::models::user::{User, UserRef, UserTrait};
 pub use crate::traits::resolvable::Resolvable;
 
 pub use crate::bot::Bot;

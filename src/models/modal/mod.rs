@@ -1,10 +1,10 @@
 use async_trait::async_trait;
-use worker::Env;
-
-use crate::models::interaction::Interaction;
-use crate::models::modal::data::ModalData;
 use crate::error::Result;
+use crate::models::modal::context::ModalContext;
+use crate::models::modal::interaction::ModalInteraction;
 
+pub mod interaction;
+pub mod context;
 pub mod data;
 
 pub type ModalType = Box<dyn Modal>;
@@ -18,5 +18,5 @@ pub trait Modal: Send + Sync {
 
     fn components(&self) -> Vec<()>;
 
-    async fn on_submit(&self, interaction: Interaction, data: ModalData, env: Env) -> Result<()>;
+    async fn on_submit(&self, interaction: ModalInteraction, ctx: ModalContext) -> Result<()>;
 }

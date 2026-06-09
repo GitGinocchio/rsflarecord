@@ -10,11 +10,21 @@ use crate::error::{Error, Result};
 
 #[allow(unused)]
 pub struct User(TwilightUser);
-
 pub struct UserRef<'a>(&'a TwilightUser);
 
-impl<'a> UserRef<'a> {
-    pub fn mention(&self) -> String {
+#[allow(unused)]
+pub trait UserTrait {
+    fn mention(&self) -> String;
+}
+
+impl UserTrait for User {
+    fn mention(&self) -> String {
+        format!("<@{}>", self.0.id)
+    }
+}
+
+impl<'a> UserTrait for UserRef<'a> {
+    fn mention(&self) -> String {
         format!("<@{}>", self.0.id)
     }
 }
@@ -27,6 +37,12 @@ impl From<TwilightUser> for User {
 
 impl<'a> From<&'a TwilightUser> for UserRef<'a> {
     fn from(value: &'a TwilightUser) -> Self {
+        Self(&value)
+    }
+}
+
+impl<'a> From<&'a User> for UserRef<'a> {
+    fn from(value: &'a User) -> Self {
         Self(&value)
     }
 }

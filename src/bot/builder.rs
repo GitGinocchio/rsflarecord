@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use crate::{bot::Bot, models::{command::{Command, CommandHandler, CommandResult, CommandType, context::CommandContext}, components::ComponentType, interaction::Interaction, modal::ModalType}};
+use crate::{bot::Bot, models::{command::{Command, CommandHandler, CommandResult, CommandType, context::CommandContext, interaction::CommandInteraction}, components::ComponentType, modal::ModalType}};
 
 
 #[allow(unused)]
@@ -31,7 +31,7 @@ impl BotBuilder {
         handler: F
     ) -> Self
     where 
-        F: Fn(Interaction, CommandContext) -> Fut + Send + Sync + 'static,
+        F: Fn(CommandInteraction, CommandContext) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = CommandResult> + Send + Sync + 'static,
     {
         let handler = CommandHandler::new(name.into(), description.into(), handler);

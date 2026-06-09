@@ -10,7 +10,7 @@ pub struct ModalData(TwilightModalData);
 
 #[allow(unused)]
 impl ModalData {
-
+    // TODO: Creare dei metodi helper
 }
 
 impl From<TwilightModalData> for ModalData {

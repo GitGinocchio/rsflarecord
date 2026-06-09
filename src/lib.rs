@@ -8,6 +8,6 @@ pub mod traits;
 
 pub mod prelude;
 
-pub extern crate twilight_model;
-pub extern crate twilight_util;
-pub extern crate twilight_validate;
+//pub extern crate twilight_model;
+//pub extern crate twilight_util;
+//pub extern crate twilight_validate;

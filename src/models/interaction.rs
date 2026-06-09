@@ -1,26 +1,12 @@
-use std::{ops::Deref};
-use twilight_model::{application::interaction::{
-    Interaction as TwilightInteraction, InteractionData, InteractionType
-}, http::interaction::{InteractionResponse, InteractionResponseType}};
+use std::ops::{Deref, DerefMut};
+
+use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionData, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}, id::{Id, marker::UserMarker}};
 use worker::{Env, Response};
 
-use crate::{
-    bot::{Bot, HTTP_CLIENT}, 
-    error::{Error, Result}, 
-    models::{
-        autocomplete::{context::AutocompleteContext, data::AutocompleteData, dispatcher::AutocompleteDispatcher}, 
-        command::{
-            context::CommandContext, 
-            data::CommandData, 
-            dispatcher::CommandDispatcher
-        }, 
-        components::data::ComponentData, 
-        modal::data::ModalData, user::UserRef
-    }, 
-    services::discord::DiscordService
-};
+use crate::{bot::{Bot, HTTP_CLIENT}, error::{Error, Result}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::data::ComponentData, modal::{context::ModalContext, interaction::ModalInteraction}, user::UserRef}, services::discord::DiscordService};
 
-pub struct Interaction(TwilightInteraction);
+#[allow(unused)]
+pub (crate) struct Interaction(TwilightInteraction);
 
 #[allow(unused)]
 impl Interaction {
@@ -46,23 +32,20 @@ impl Interaction {
     }
 
     async fn handle_command(self, env: Env) -> Result<Response> {
-        let mut data = match self.data.as_ref() {
-            Some(InteractionData::ApplicationCommand(data)) => CommandData::from(*data.clone()),
-            Some(_) | None => return Err(Error::InvalidPayload("Missing or invalid command data".into()))
-        };
+        let command_interaction = CommandInteraction::try_from(self)?;
         
         let bot = Bot::get_global();
 
-        let Some(command) = bot.commands.get(&data.0.name) else {
-            return Err(Error::CommandNotFound(format!("{}", data.0.name)))
+        let Some(command) = bot.commands.get(&command_interaction.data.0.name) else {
+            return Err(Error::CommandNotFound(format!("{}", command_interaction.data.0.name)))
         };
 
         let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
         let discord_service = DiscordService::get_or_init(http_client.clone());
 
-        let ctx = CommandContext::new(bot.clone(), env, data, discord_service);
+        let ctx = CommandContext::new(bot.clone(), env, discord_service);
 
-        match CommandDispatcher::dispatch(command, self, ctx).await {
+        match CommandDispatcher::dispatch(command, command_interaction, ctx).await {
             Err(e) => Ok(e.as_response()?),
             Ok(response) => {
                 let value = serde_json::to_value::<InteractionResponse>(response.into())
@@ -74,22 +57,19 @@ impl Interaction {
     }
 
     async fn handle_autocomplete(self, env: Env) -> Result<Response> {
-        let mut data = match self.data.as_ref() {
-            Some(InteractionData::ApplicationCommand(data)) => AutocompleteData::from(*data.clone()),
-            Some(_) | None => return Err(Error::InvalidPayload("Missing or invalid command data".into()))
-        };
+        let autocomplete_interaction = AutocompleteInteraction::try_from(self)?;
 
         let bot = Bot::get_global();
-        let Some(command) = bot.commands.get(&data.0.name) else {
-            return Err(Error::CommandNotFound(format!("{}", data.0.name)))
+        let Some(command) = bot.commands.get(&autocomplete_interaction.data.0.name) else {
+            return Err(Error::CommandNotFound(format!("{}", autocomplete_interaction.data.0.name)))
         };
 
         let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
         let discord_service = DiscordService::get_or_init(http_client.clone());
 
-        let ctx = AutocompleteContext::new(bot.clone(), env, data, discord_service);
+        let ctx = AutocompleteContext::new(bot.clone(), env, discord_service);
 
-        match AutocompleteDispatcher::dispatch(command, self, ctx).await {
+        match AutocompleteDispatcher::dispatch(command, autocomplete_interaction, ctx).await {
             Err(e) => Ok(e.as_response()?),
             Ok(response) => {
                 let value = serde_json::to_value::<InteractionResponse>(response.into())
@@ -101,17 +81,18 @@ impl Interaction {
     }
 
     async fn handle_modal_submit(self, env: Env) -> Result<Response> {
-        let mut data = match self.data.as_ref() {
-            Some(InteractionData::ModalSubmit(data)) => ModalData::from(*data.clone()),
-            Some(_) | None => return Err(Error::InvalidPayload("Missing or invalid modal data".into()))
-        };
+        let modal_interaction = ModalInteraction::try_from(self)?;
 
         let bot = Bot::get_global();
-        let Some(modal) = bot.modals.get(&data.custom_id) else {
-            return Err(Error::ModalNotFound(format!("{}", data.custom_id)))
+        let Some(modal) = bot.modals.get(&modal_interaction.data.custom_id) else {
+            return Err(Error::ModalNotFound(format!("{}", modal_interaction.data.custom_id)))
         };
 
-        match modal.on_submit(self, data, env).await {
+        let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
+        let discord_service = DiscordService::get_or_init(http_client.clone());
+        let ctx = ModalContext::new(bot.clone(), env, discord_service);
+
+        match modal.on_submit(modal_interaction, ctx).await {
             Ok(response) => Ok(Response::empty()?),
             Err(e) => Ok(e.as_response()?)
         }
@@ -132,7 +113,11 @@ impl Interaction {
     }
 
     pub fn author(&self) -> Option<UserRef<'_>> {
-        self.0.author().map(|a| UserRef::from(a))
+        self.0.author().map(|a| a.into())
+    }
+
+    pub fn author_id(&self) -> Option<Id<UserMarker>> {
+        self.0.author_id()
     }
 }
 
@@ -144,8 +129,14 @@ impl From<TwilightInteraction> for Interaction {
 
 impl Deref for Interaction {
     type Target = TwilightInteraction;
-
+    
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl DerefMut for Interaction {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }

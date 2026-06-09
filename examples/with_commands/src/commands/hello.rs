@@ -1,3 +1,4 @@
+use flarecord::models::command::interaction::CommandInteraction;
 use flarecord::prelude::*;
 use flarecord::error::Error;
 use async_trait::async_trait;
@@ -21,9 +22,9 @@ impl Command for Hello {
         Ok(Some(vec![user_option]))
     }
 
-    async fn execute(&self, interaction: Interaction, ctx: CommandContext) -> CommandResult {
+    async fn execute(&self, interaction: CommandInteraction, _ctx: CommandContext) -> CommandResult {
         let author = interaction.author().ok_or(Error::Generic("Missing author".into()))?;
-        let user = ctx.data.get_resolved_user("user");
+        let user = interaction.data.get_resolved_user("user");
 
         let message = match user {
             Some(user) => format!("Hello {0}, {1} greeted you", user.mention(), author.mention()),

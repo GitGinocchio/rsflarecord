@@ -53,8 +53,8 @@ impl<'a> Serialize for SerializableCommand<'a> {
             }
         }
 
-        //let itypes = self.0.integration_types();
-        //let icontexts = self.0.interaction_contexts();
+        let itypes = self.0.integration_types();
+        let icontexts = self.0.interaction_contexts();
 
         let discord_cmd = TwilightCommand {
             name: self.0.name(),
@@ -69,24 +69,18 @@ impl<'a> Serialize for SerializableCommand<'a> {
             version: Id::new(1),
             name_localizations: None,
             description_localizations: None,
-            contexts: None,
-            /*
             contexts: if icontexts.is_empty() {
                 None
             } else {
                 Some(icontexts)
             },
-            */
             #[allow(deprecated)]
             dm_permission: None,
-            integration_types: None
-            /*
             integration_types: if itypes.is_empty() {
                 None
             } else {
                 Some(itypes)
             },
-            */
         };
 
         discord_cmd.serialize(serializer)
