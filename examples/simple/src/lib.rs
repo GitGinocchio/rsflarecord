@@ -8,6 +8,15 @@
 use worker::*;
 use flarecord::{bot::builder::BotBuilder, prelude::*};
 
+/// 
+/// To deploy this bot:
+/// 1. Configure Cloudflare: `wrangler init`
+/// 2. Set secrets: `wrangler secret put DISCORD_BOT_TOKEN` etc.
+/// 3. Build: `cargo build --target wasm32-unknown-unknown --release`
+/// 4. Deploy: `wrangler deploy`
+/// 
+/// See GETTING_STARTED.md for complete setup instructions
+///
 #[event(fetch)]
 async fn fetch(
     req: Request,
@@ -41,13 +50,3 @@ async fn fetch(
     // Handle the Discord interaction
     bot.handle(req, env).await
 }
-
-/// 
-/// To deploy this bot:
-/// 1. Configure Cloudflare: `wrangler init`
-/// 2. Set secrets: `wrangler secret put DISCORD_BOT_TOKEN` etc.
-/// 3. Build: `cargo build --target wasm32-unknown-unknown --release`
-/// 4. Deploy: `wrangler deploy`
-/// 
-/// See GETTING_STARTED.md for complete setup instructions
-///
