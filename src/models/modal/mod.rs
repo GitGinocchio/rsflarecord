@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::error::Result;
+use crate::error::BotResult;
 use crate::models::modal::context::ModalContext;
 use crate::models::modal::interaction::ModalInteraction;
 
@@ -18,5 +18,5 @@ pub trait Modal: Send + Sync {
 
     fn components(&self) -> Vec<()>;
 
-    async fn on_submit(&self, interaction: ModalInteraction, ctx: ModalContext) -> Result<()>;
+    async fn on_submit(&self, interaction: ModalInteraction, ctx: ModalContext) -> BotResult<()>;
 }

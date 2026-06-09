@@ -6,7 +6,7 @@ use twilight_model::user::User as TwilightUser;
 
 use crate::services::discord::DISCORD_SERVICE;
 use crate::traits::resolvable::Resolvable;
-use crate::error::{Error, Result};
+use crate::error::{Error, BotResult};
 
 #[allow(unused)]
 pub struct User(TwilightUser);
@@ -65,7 +65,7 @@ impl<'a> Deref for UserRef<'a> {
 
 #[async_trait(?Send)]
 impl Resolvable<User> for Id<UserMarker> {
-    async fn resolve(&self) -> Result<User> {
+    async fn resolve(&self) -> BotResult<User> {
         let discord = DISCORD_SERVICE
             .get()
             .ok_or(Error::Generic("Discord Service not initiliazed!".into()))?;

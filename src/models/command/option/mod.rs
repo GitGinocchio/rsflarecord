@@ -6,7 +6,7 @@ use twilight_model::{
     channel::ChannelType
 };
 
-use crate::{error::{Error, Result}, models::command::option::builder::CommandOptionBuilder};
+use crate::{error::{Error, BotResult}, models::command::option::builder::CommandOptionBuilder};
 
 pub mod builder;
 pub mod value;
@@ -32,41 +32,41 @@ impl CommandOption {
         }
     }
 
-    pub fn string(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn string(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::string(name, description).build()
     }
 
-    pub fn bool(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn bool(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::bool(name, description).build()
     }
 
-    pub fn integer(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn integer(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::integer(name, description).build()
     }
 
-    pub fn number(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn number(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::number(name, description).build()
     }
 
-    pub fn mentionable(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn mentionable(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::mentionable(name, description).build()
     }
 
-    pub fn user(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn user(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::user(name, description).build()
     }
 
-    pub fn role(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn role(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::role(name, description).build()
     }
 
-    pub fn channel(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn channel(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         let mut command_option = CommandOptionBuilder::channel(name, description).build()?;
         command_option.channel_types = Some(vec![]);
         Ok(command_option)
     }
 
-    pub fn attachment(name: impl Into<String>, description: impl Into<String>) -> Result<Self> {
+    pub fn attachment(name: impl Into<String>, description: impl Into<String>) -> BotResult<Self> {
         CommandOptionBuilder::attachment(name, description).build()
     }
 
@@ -78,7 +78,7 @@ impl CommandOption {
         self.autocomplete = Some(autocomplete);
     }
     
-    pub fn set_channel_types(&mut self, channel_types: Vec<ChannelType>) -> Result<()> {
+    pub fn set_channel_types(&mut self, channel_types: Vec<ChannelType>) -> BotResult<()> {
         if self.kind != CommandOptionType::Channel {
             return Err(Error::InvalidOptionType("Channel types are only valid for Channel options".into()));
         }
@@ -87,7 +87,7 @@ impl CommandOption {
         Ok(())
     }
 
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self) -> BotResult<()> {
         if self.name.is_empty() { return Err(Error::InvalidOptionName(self.name.clone())) }
         if self.name.is_empty() { return Err(Error::InvalidOptionName(self.name.clone())) }
 

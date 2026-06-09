@@ -18,6 +18,7 @@ use crate::crypto;
 use crate::services::discord::DiscordService;
 
 pub mod builder;
+pub mod state;
 
 pub (crate) static HTTP_CLIENT: OnceLock<Arc<Client>> = OnceLock::new();
 static BOT: OnceLock<Arc<Bot>> = OnceLock::new();
@@ -90,7 +91,7 @@ impl Bot {
     /// - JSON serialization of the commands fails.
     /// - The HTTP request to Discord fails or returns an error status code.
     pub async fn sync_commands_once(&self, env: &Env) -> worker::Result<bool> {
-        if IS_INITIALIZED.load(Ordering::Acquire) {
+        if IS_INITIALIZED.load(Ordering::Relaxed) {
             worker::console_debug!("Command synchronization not necessary");
             return Ok(true);
         }
@@ -122,7 +123,7 @@ impl Bot {
         let discord_service = DiscordService::get_or_init(client.clone());
         discord_service.update_global_commands(&application_id, &serialized_commands).await?;
 
-        IS_INITIALIZED.store(true, Ordering::Release);
+        IS_INITIALIZED.store(true, Ordering::Relaxed);
 
         Ok(false)
     }

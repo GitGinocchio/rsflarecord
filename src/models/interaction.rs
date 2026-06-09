@@ -3,14 +3,14 @@ use std::ops::{Deref, DerefMut};
 use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}};
 use worker::{Env, Response};
 
-use crate::{bot::{Bot, HTTP_CLIENT}, error::{Error, Result}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modal::{context::ModalContext, interaction::ModalInteraction}}, services::discord::DiscordService};
+use crate::{bot::{Bot, HTTP_CLIENT, state::BotState}, error::{BotResult, Error}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modal::{context::ModalContext, interaction::ModalInteraction}}, services::discord::DiscordService};
 
 #[allow(unused)]
 pub (crate) struct Interaction(TwilightInteraction);
 
 #[allow(unused)]
 impl Interaction {
-    pub (crate) async fn perform(self, env: Env) -> Result<Response> {
+    pub (crate) async fn perform(self, env: Env) -> BotResult<Response> {
         match self.kind {
             InteractionType::ApplicationCommandAutocomplete => self.handle_autocomplete(env).await,
             InteractionType::ApplicationCommand => self.handle_command(env).await,
@@ -21,7 +21,7 @@ impl Interaction {
         }
     }
 
-    async fn handle_ping(&self) -> Result<Response> {
+    async fn handle_ping(&self) -> BotResult<Response> {
         let response = InteractionResponse {
             kind: InteractionResponseType::Pong,
             data: None
@@ -31,7 +31,7 @@ impl Interaction {
         Response::from_json(&value).map_err(Error::WorkerError)
     }
 
-    async fn handle_command(self, env: Env) -> Result<Response> {
+    async fn handle_command(self, env: Env) -> BotResult<Response> {
         let command_interaction = CommandInteraction::try_from(self)?;
         
         let bot = Bot::get_global();
@@ -43,7 +43,8 @@ impl Interaction {
         let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
         let discord_service = DiscordService::get_or_init(http_client.clone());
 
-        let ctx = CommandContext::new(bot.clone(), env, discord_service);
+        let bot_state = BotState::new(bot.clone());
+        let ctx = CommandContext::new(bot_state, env, discord_service);
 
         match CommandDispatcher::dispatch(command, command_interaction, ctx).await {
             Err(e) => Ok(e.as_response()?),
@@ -56,7 +57,7 @@ impl Interaction {
         }
     }
 
-    async fn handle_autocomplete(self, env: Env) -> Result<Response> {
+    async fn handle_autocomplete(self, env: Env) -> BotResult<Response> {
         let autocomplete_interaction = AutocompleteInteraction::try_from(self)?;
 
         let bot = Bot::get_global();
@@ -67,7 +68,8 @@ impl Interaction {
         let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
         let discord_service = DiscordService::get_or_init(http_client.clone());
 
-        let ctx = AutocompleteContext::new(bot.clone(), env, discord_service);
+        let bot_state = BotState::new(bot.clone());
+        let ctx = AutocompleteContext::new(bot_state, env, discord_service);
 
         match AutocompleteDispatcher::dispatch(command, autocomplete_interaction, ctx).await {
             Err(e) => Ok(e.as_response()?),
@@ -80,7 +82,7 @@ impl Interaction {
         }
     }
 
-    async fn handle_modal_submit(self, env: Env) -> Result<Response> {
+    async fn handle_modal_submit(self, env: Env) -> BotResult<Response> {
         let modal_interaction = ModalInteraction::try_from(self)?;
 
         let bot = Bot::get_global();
@@ -90,7 +92,9 @@ impl Interaction {
 
         let http_client = HTTP_CLIENT.get().expect("HTTP_CLIENT not initialized!");
         let discord_service = DiscordService::get_or_init(http_client.clone());
-        let ctx = ModalContext::new(bot.clone(), env, discord_service);
+
+        let bot_state = BotState::new(bot.clone());
+        let ctx = ModalContext::new(bot_state, env, discord_service);
 
         match modal.on_submit(modal_interaction, ctx).await {
             Ok(response) => Ok(Response::empty()?),
@@ -98,7 +102,7 @@ impl Interaction {
         }
     }
 
-    async fn handle_component(self, env: Env) -> Result<Response> {
+    async fn handle_component(self, env: Env) -> BotResult<Response> {
         let component_interaction = ComponentInteraction::try_from(self)?;
 
         let bot = Bot::get_global();
@@ -110,8 +114,14 @@ impl Interaction {
         let discord_service = DiscordService::get_or_init(http_client.clone());
         let ctx = ComponentContext::new(bot.clone(), env, discord_service);
 
-        match component.handle(component_interaction, ctx).await? {
-            () => Ok(Response::empty()?)
+        match component.handle(component_interaction, ctx).await {
+            Err(e) => Ok(e.as_response()?),
+            Ok(response) => {
+                let value = serde_json::to_value::<InteractionResponse>(response.into())
+                    .map_err(Error::JsonFailed)?;
+
+                Response::from_json(&value).map_err(Error::WorkerError)
+            }
         }
     }
 }

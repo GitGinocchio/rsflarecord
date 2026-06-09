@@ -83,4 +83,4 @@ impl From<Error> for worker::Error {
     }
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type BotResult<T> = std::result::Result<T, Error>;

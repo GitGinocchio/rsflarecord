@@ -1,5 +1,4 @@
 use flarecord::prelude::*;
-use flarecord::error::Error;
 use async_trait::async_trait;
 
 pub struct Hello;
@@ -14,14 +13,14 @@ impl Command for Hello {
         "Say Hi to someone in chat!".into()
     }
 
-    fn options(&self) -> CommandOptions {
+    fn options(&self) -> BotResult<CommandOptions> {
         let user_option = CommandOptionBuilder::user("user", "the user to greet")
             .build()?;
        
         Ok(Some(vec![user_option]))
     }
 
-    async fn execute(&self, interaction: CommandInteraction, _ctx: CommandContext) -> CommandResult {
+    async fn execute(&self, interaction: CommandInteraction, _ctx: CommandContext) -> BotResult<CommandResponse> {
         let author = interaction.author().ok_or(Error::Generic("Missing author".into()))?;
         let user = interaction.data.get_resolved_user("user");
 

@@ -99,6 +99,35 @@ impl CommandInteraction {
     pub fn author_id(&self) -> Option<Id<UserMarker>> {
         self.author().map(|a| a.id)
     }
+
+    /// Returns true if the interaction occurred within a guild (server) context.
+    /// 
+    /// This uses the `context` field if available, falling back to 
+    /// checking if `guild_id` is present for older payloads.
+    pub fn is_guild(&self) -> bool {
+        match self.context {
+            Some(InteractionContextType::Guild) => true,
+            Some(_) => false,
+            None => self.guild_id.is_some(),
+        }
+    }
+
+    /// Returns true if the interaction occurred in a private context, 
+    /// covering both direct messages and private group channels.
+    pub fn is_private(&self) -> bool {
+        self.is_private_channel() || self.is_bot_dm()
+    }
+
+    /// Returns true if the interaction occurred in a private group channel.
+    pub fn is_private_channel(&self) -> bool {
+        matches!(self.context, Some(InteractionContextType::PrivateChannel))
+    }
+
+    /// Returns true if the interaction occurred in a direct message (DM) 
+    /// between the user and the bot.
+    pub fn is_bot_dm(&self) -> bool {
+        matches!(self.context, Some(InteractionContextType::BotDm))
+    }
 }
 
 impl TryFrom<Interaction> for CommandInteraction {

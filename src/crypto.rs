@@ -1,9 +1,9 @@
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use worker::Headers;
 
-use crate::error::{Error, Result};
+use crate::error::{Error, BotResult};
 
-pub (crate) fn verify_signature(headers: &Headers, body: &[u8], public_key_hex: &str) -> Result<bool> {
+pub (crate) fn verify_signature(headers: &Headers, body: &[u8], public_key_hex: &str) -> BotResult<bool> {
     let signature_header = headers.get("X-Signature-Ed25519")?
         .ok_or_else(|| Error::MissingHeader("Missing X-Signature-Ed25519 header".into()))?;
 

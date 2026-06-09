@@ -2,7 +2,7 @@ use twilight_model::application::command::CommandOptionType;
 use twilight_model::channel::ChannelType;
 
 use crate::models::command::option::CommandOption;
-use crate::error::Result;
+use crate::error::BotResult;
 
 pub struct CommandOptionBuilder(CommandOption);
 
@@ -61,7 +61,7 @@ impl CommandOptionBuilder {
         self
     }
 
-    pub fn build(self) -> Result<CommandOption> {
+    pub fn build(self) -> BotResult<CommandOption> {
         self.0.validate()?;
         Ok(self.0)
     }
