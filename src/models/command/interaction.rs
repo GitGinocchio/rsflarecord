@@ -59,7 +59,7 @@ pub struct CommandInteraction {
 
 impl CommandInteraction {
     pub (crate) fn with_inner_data(self) -> Option<Self> {
-        let resolved = self.data.0.resolved;
+        let mut resolved = self.data.0.resolved;
         let guild_id = self.data.0.guild_id;
         let id = self.data.0.id;
         let kind = self.data.0.kind;
@@ -72,7 +72,7 @@ impl CommandInteraction {
                     Some(CommandData(TwilightCommandData {
                         name: opt.name,
                         options: data, // Questo è già un Vec, lo spostiamo direttamente
-                        resolved: resolved.clone(), // Vedi nota sotto
+                        resolved: resolved.take(),
                         guild_id,
                         id,
                         kind,
