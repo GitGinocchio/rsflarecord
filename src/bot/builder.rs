@@ -10,8 +10,8 @@ use crate::{
             interaction::CommandInteraction, 
             response::CommandResponse
         }, 
-        components::ComponentType, 
-        modal::ModalType
+        components::{Component, ComponentType}, 
+        modal::{Modal, ModalType}
     }
 };
 
@@ -33,8 +33,18 @@ impl BotBuilder {
         }
     }
 
+    pub fn register_component(mut self, component: impl Component + 'static) -> Self {
+        self.components.insert(component.id(), Box::new(component));
+        self
+    }
+
+    pub fn register_modal(mut self, modal: impl Modal + 'static) -> Self {
+        self.modals.insert(modal.id(), Box::new(modal));
+        self
+    }
+
     pub fn register_command(mut self, command: impl Command + 'static) -> Self {
-        self.commands.insert(command.name().into(), Box::new(command));
+        self.commands.insert(command.name(), Box::new(command));
         self
     }
 

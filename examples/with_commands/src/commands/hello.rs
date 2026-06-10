@@ -1,4 +1,4 @@
-use flarecord::prelude::*;
+use flarecord::{prelude::*};
 use async_trait::async_trait;
 
 pub struct Hello;

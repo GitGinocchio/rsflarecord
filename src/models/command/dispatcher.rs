@@ -1,18 +1,15 @@
 use crate::{
-    error::{Error, BotResult}, 
+    error::{BotResult, Error}, 
     models::command::{
-            Command, 
-            SubcommandGroup, 
-            context::CommandContext, 
-            interaction::CommandInteraction, response::CommandResponse
-        }
+        CommandType, SubcommandGroupType, context::CommandContext, interaction::CommandInteraction, response::CommandResponse
+    }
 };
 
 pub (crate) struct CommandDispatcher;
 
 impl CommandDispatcher {
     pub (crate) async fn dispatch(
-        cmd: &Box<dyn Command>,
+        cmd: &CommandType,
         interaction: CommandInteraction,
         ctx: CommandContext
     ) -> BotResult<CommandResponse> {
@@ -40,7 +37,7 @@ impl CommandDispatcher {
     }
 
     async fn dispatch_group(
-        group: &Box<dyn SubcommandGroup>,
+        group: &SubcommandGroupType,
         interaction: CommandInteraction,
         ctx: CommandContext
     ) -> BotResult<CommandResponse> {

@@ -8,7 +8,7 @@ members = [
     "examples/with_commands",
     "examples/simple",
     "."
-]
+, "examples/subcommands"]
 
 [dependencies]
 worker = "^0.8"
