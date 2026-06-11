@@ -24,10 +24,6 @@ mod re_exports {
         RoleFlags
     };
 
-    pub use twilight_model::channel::message::component::{
-        ButtonStyle
-    };
-
     pub use twilight_model::application::{
         EmojiList,
         interaction::{
