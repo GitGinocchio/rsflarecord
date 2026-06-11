@@ -6,9 +6,11 @@ edition = "2024"
 [workspace]
 members = [
     "examples/with_commands",
+    "examples/subcommands",
+    "examples/components",
     "examples/simple",
     "."
-, "examples/subcommands"]
+]
 
 [dependencies]
 worker = "^0.8"

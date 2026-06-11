@@ -3,7 +3,7 @@ pub mod autocomplete;
 pub mod components;
 pub mod attachment;
 pub mod command;
-pub mod modal;
+pub mod modals;
 pub mod embed;
 pub mod color;
 pub mod user;
@@ -22,6 +22,10 @@ mod re_exports {
         SystemChannelFlags,
         MemberFlags,
         RoleFlags
+    };
+
+    pub use twilight_model::channel::message::component::{
+        ButtonStyle
     };
 
     pub use twilight_model::application::{

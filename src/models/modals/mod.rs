@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crate::error::BotResult;
-use crate::models::modal::context::ModalContext;
-use crate::models::modal::interaction::ModalInteraction;
+use crate::models::modals::context::ModalContext;
+use crate::models::modals::interaction::ModalInteraction;
 
 pub mod interaction;
 pub mod context;

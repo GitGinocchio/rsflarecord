@@ -1,6 +1,6 @@
 use twilight_model::{application::{interaction::{InteractionContextType, InteractionData, InteractionPartialGuild}, monetization::Entitlement}, channel::Channel, guild::{PartialMember, Permissions}, id::{AnonymizableId, Id, marker::{ApplicationMarker, ChannelMarker, GuildMarker, InteractionMarker, UserMarker}}, oauth::ApplicationIntegrationMap};
 
-use crate::{error::Error, models::{interaction::Interaction, modal::data::ModalData, user::{User, UserRef}}};
+use crate::{error::Error, models::{interaction::Interaction, modals::data::ModalData, user::{User, UserRef}}};
 
 #[allow(unused)]
 pub struct ModalInteraction {

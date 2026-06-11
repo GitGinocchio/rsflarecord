@@ -12,7 +12,7 @@ use crate::models::command::serializable::SerializableCommand;
 use crate::models::command::{CommandType};
 use crate::models::components::ComponentType;
 use crate::models::interaction::Interaction;
-use crate::models::modal::ModalType;
+use crate::models::modals::ModalType;
 use crate::error::Error;
 use crate::crypto;
 use crate::services::discord::DiscordService;

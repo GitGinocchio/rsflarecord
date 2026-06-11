@@ -11,7 +11,7 @@ use crate::{
             response::CommandResponse
         }, 
         components::{Component, ComponentType}, 
-        modal::{Modal, ModalType}
+        modals::{Modal, ModalType}
     }
 };
 
