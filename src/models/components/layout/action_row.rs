@@ -1,6 +1,11 @@
 use std::marker::PhantomData;
 
-use crate::models::components::{interactive::{button::Button, select::Select}};
+use twilight_model::channel::message::{
+    Component as TwilightComponent, 
+    component::ActionRow as TwilightActionRow
+};
+
+use crate::{models::components::{interactive::{button::Button, select::Select}, layout::LayoutComponent}, traits::component::IntoTwilight};
 
 pub struct Empty;
 pub struct Has1;
@@ -147,3 +152,35 @@ impl_action_row!(
     (Has5, Has5),
     (HasSelect, HasSelect),
 );
+
+impl IntoTwilight<TwilightComponent> for ActionRowChild {
+    fn into_twilight(self) -> TwilightComponent {
+        match self {
+            Self::Button(button) => TwilightComponent::Button(button.into_twilight()),
+            Self::Select(select) => TwilightComponent::SelectMenu(select.into_twilight())
+        }
+    }
+}
+
+impl<T> IntoTwilight<TwilightActionRow> for ActionRowState<T> {
+    fn into_twilight(self) -> TwilightActionRow {
+        TwilightActionRow {
+            id: Some(self.id),
+            components: self.components.into_iter().map(|c| c.into_twilight()).collect()
+        }
+    }
+}
+
+impl IntoTwilight<TwilightComponent> for ActionRow {
+    fn into_twilight(self) -> TwilightComponent {
+        match self {
+            Self::Empty(empty) => TwilightComponent::ActionRow(empty.into_twilight()),
+            Self::Has1(select) => TwilightComponent::ActionRow(select.into_twilight()),
+            Self::Has2(select) => TwilightComponent::ActionRow(select.into_twilight()),
+            Self::Has3(select) => TwilightComponent::ActionRow(select.into_twilight()),
+            Self::Has4(select) => TwilightComponent::ActionRow(select.into_twilight()),
+            Self::Has5(select) => TwilightComponent::ActionRow(select.into_twilight()),
+            Self::HasSelect(select) => TwilightComponent::ActionRow(select.into_twilight()),
+        }
+    }
+}

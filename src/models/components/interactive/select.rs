@@ -1,11 +1,29 @@
 use std::marker::PhantomData;
 
 use twilight_model::{
-    channel::{ChannelType, message::component::{SelectDefaultValue, SelectMenu as TwilightSelectMenu, SelectMenuType}}, 
-    id::{Id, marker::{ChannelMarker, GenericMarker, RoleMarker, UserMarker}}
+    channel::{
+        ChannelType, 
+        message::{
+            Component as TwilightComponent, 
+            component::{
+                SelectDefaultValue, 
+                SelectMenu as TwilightSelectMenu, 
+                SelectMenuType
+            }
+        }
+    }, 
+    id::{
+        Id, 
+        marker::{
+            ChannelMarker, 
+            GenericMarker, 
+            RoleMarker, 
+            UserMarker
+        }
+    }
 };
 
-use crate::models::components::{context::ComponentContext, interaction::ComponentInteraction};
+use crate::{models::components::{context::ComponentContext, interaction::ComponentInteraction}, traits::component::IntoTwilight};
 
 pub enum Select {
     String(SelectKind<String>),
@@ -169,3 +187,33 @@ impl_into_select!(
     (Id<GenericMarker>, Mentionable),
     (Id<ChannelMarker>, Channel),
 );
+
+impl<T> IntoTwilight<TwilightSelectMenu> for SelectKind<T> {
+    fn into_twilight(self) -> TwilightSelectMenu {
+        TwilightSelectMenu {
+            id: self.inner.id,
+            channel_types: self.inner.channel_types,
+            custom_id: self.inner.custom_id,
+            default_values: self.inner.default_values,
+            disabled: self.inner.disabled,
+            kind: self.inner.kind,
+            max_values: self.inner.max_values,
+            min_values: self.inner.min_values,
+            options: self.inner.options,
+            placeholder: self.inner.placeholder,
+            required: self.inner.required
+        }
+    }
+}
+
+impl IntoTwilight<TwilightSelectMenu> for Select {
+    fn into_twilight(self) -> TwilightSelectMenu {
+        match self {
+            Self::String(select) => select.into_twilight(),
+            Self::Channel(select) => select.into_twilight(),
+            Self::User(select) => select.into_twilight(),
+            Self::Role(select) => select.into_twilight(),
+            Self::Mentionable(select) => select.into_twilight()
+        }
+    }
+}

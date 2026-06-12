@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
 use twilight_model::{application::interaction::InteractionContextType, guild::Permissions, id::{Id, marker::GuildMarker}, oauth::ApplicationIntegrationType};
@@ -26,7 +26,7 @@ pub mod interaction;
 pub mod context;
 
 
-pub type CommandType = Box<dyn Command>;
+pub type CommandType = Arc<dyn Command>;
 
 pub type CommandOptions = Option<Vec<CommandOption>>;
 

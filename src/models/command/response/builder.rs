@@ -1,6 +1,6 @@
 use twilight_model::channel::message::Embed;
 
-use crate::models::attachment::outgoing::Attachment;
+use crate::{models::{attachment::outgoing::Attachment, components::{Component, ComponentType}}, traits::component::IntoComponent};
 
 use super::CommandResponse;
 
@@ -34,6 +34,19 @@ impl CommandResponseBuilder {
 
     pub fn attachment(mut self, attachment: Attachment) -> Self {
         self.0.add_attachment(attachment);
+        self
+    }
+
+    /// Adds a component to the response.
+    ///
+    /// The `component` argument can be any type that implements [`IntoComponent`].
+    /// 
+    /// This includes:
+    /// - **Layout Components**: Any type that can be converted into a [`LayoutComponent`], 
+    ///   specifically: [`ActionRow`], [`Container`], [`Section`], or [`Separator`].
+    /// - **Custom Components**: Any type implementing the [`Component`] trait.
+    pub fn component(mut self, component: impl IntoComponent) -> Self {
+        self.0.add_component(component);
         self
     }
 

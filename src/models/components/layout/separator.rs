@@ -1,4 +1,9 @@
-use twilight_model::channel::message::component::Separator as TwilightSeparator;
+use twilight_model::channel::message::{
+    Component as TwilightComponent, 
+    component::Separator as TwilightSeparator
+};
+
+use crate::traits::component::IntoTwilight;
 
 
 
@@ -27,5 +32,17 @@ impl Separator {
     pub fn divider(mut self, divider: bool) -> Self {
         self.0.divider = Some(divider);
         self
+    }
+}
+
+impl IntoTwilight<TwilightSeparator> for Separator {
+    fn into_twilight(self) -> TwilightSeparator {
+        self.0
+    }
+}
+
+impl IntoTwilight<TwilightComponent> for Separator {
+    fn into_twilight(self) -> TwilightComponent {
+        TwilightComponent::Separator(self.into_twilight())
     }
 }

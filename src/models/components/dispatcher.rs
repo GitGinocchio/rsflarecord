@@ -1,11 +1,11 @@
-use crate::{error::BotResult, models::{command::response::CommandResponse, components::{ComponentType, context::ComponentContext, interaction::ComponentInteraction}}};
+use crate::{error::BotResult, models::{command::{Command, response::CommandResponse}, components::{Component, CustomComponentType, context::ComponentContext, interaction::ComponentInteraction}}};
 
 
 pub (crate) struct ComponentDispatcher;
 
 impl ComponentDispatcher {
     pub (crate) async fn dispatch(
-        component: &ComponentType, 
+        component: &CustomComponentType, 
         interaction: ComponentInteraction, 
         ctx: ComponentContext
     ) -> BotResult<CommandResponse> {
@@ -14,6 +14,8 @@ impl ComponentDispatcher {
         }
 
         let root = component.build();
+
+        
 
         Ok(CommandResponse::new())
     }

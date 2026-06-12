@@ -1,17 +1,16 @@
 use async_trait::async_trait;
 use flarecord::{
     models::{ChannelType, SelectMenuType, components::{
-        interactive::{button::{
+        content::text_display::TextDisplay, interactive::{button::{
             Button, 
             ButtonStyle
-        }, select::Select}, 
-        layout::{
+        }, select::Select}, layout::{
             action_row::{
                 ActionRow, 
                 IntoActionRow
             }, 
             container::Container, 
-            section::{Section, SectionComponent}, 
+            section::{Section}, 
             separator::Separator
         }
     }}, 
@@ -36,7 +35,7 @@ impl Component for MyComponent {
             .label("test")
             .build();
 
-        let select = Select::channel()
+        let select = Select::string()
             .on_select(|_int, _ctx| {})
             .build();
 

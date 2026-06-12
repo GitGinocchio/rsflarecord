@@ -1,8 +1,18 @@
 use std::marker::PhantomData;
 
-use twilight_model::{channel::message::{EmojiReactionType, component::{Button as TwilightButton, ButtonStyle as TwilightButtonStyle}}, id::{Id, marker::SkuMarker}};
+use twilight_model::{
+    channel::message::{
+        EmojiReactionType, 
+        component::{
+            Button as TwilightButton, 
+            ButtonStyle as TwilightButtonStyle
+        }
+    }, 
+    id::{Id, marker::SkuMarker
+    }
+};
 
-use crate::models::components::{context::ComponentContext, interaction::ComponentInteraction};
+use crate::{models::components::{context::ComponentContext, interaction::ComponentInteraction}, traits::component::IntoTwilight};
 
 
 pub enum ButtonStyle {
@@ -167,3 +177,40 @@ impl_into_button!(
     (Premium, Premium),
     (Link, Link),
 );
+
+impl IntoTwilight<TwilightButton> for Button {
+    fn into_twilight(self) -> TwilightButton {
+        match self {
+            Self::Normal(button) => TwilightButton {
+                id: button.inner.id,
+                custom_id: button.inner.custom_id,
+                disabled: button.inner.disabled,
+                emoji: button.inner.emoji,
+                label: button.inner.label,
+                style: button.inner.style,
+                url: button.inner.url,
+                sku_id: button.inner.sku_id
+            },
+            Self::Premium(button) => TwilightButton {
+                id: button.inner.id,
+                custom_id: button.inner.custom_id,
+                disabled: button.inner.disabled,
+                emoji: button.inner.emoji,
+                label: button.inner.label,
+                style: button.inner.style,
+                url: button.inner.url,
+                sku_id: button.inner.sku_id
+            },
+            Self::Link(button) => TwilightButton {
+                id: button.inner.id,
+                custom_id: button.inner.custom_id,
+                disabled: button.inner.disabled,
+                emoji: button.inner.emoji,
+                label: button.inner.label,
+                style: button.inner.style,
+                url: button.inner.url,
+                sku_id: button.inner.sku_id
+            }
+        }
+    }
+}

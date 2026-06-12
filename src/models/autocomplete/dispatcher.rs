@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     error::{BotResult, Error}, 
     models::{ 
@@ -14,7 +16,7 @@ pub (crate) struct AutocompleteDispatcher;
 
 impl AutocompleteDispatcher {
     pub (crate) async fn dispatch(
-        cmd: &Box<dyn Command>,
+        cmd: &Arc<dyn Command>,
         interaction: AutocompleteInteraction,
         ctx: AutocompleteContext
     ) -> BotResult<AutocompleteResponse> {

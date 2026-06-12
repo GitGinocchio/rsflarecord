@@ -5,12 +5,11 @@ use crate::{
         command::{
             Command,
             CommandHandler, 
-            CommandType, 
             context::CommandContext, 
             interaction::CommandInteraction, 
             response::CommandResponse
         }, 
-        components::{Component, ComponentType}, 
+        components::{Component}, 
         modals::{Modal, ModalType}
     }
 };
@@ -18,8 +17,8 @@ use crate::{
 
 #[allow(unused)]
 pub struct BotBuilder {
-    pub (crate) commands: HashMap<String, CommandType>,
-    pub (crate) components: HashMap<String, ComponentType>,
+    pub (crate) commands: HashMap<String, Arc<dyn Command>>,
+    pub (crate) components: HashMap<String, Arc<dyn Component>>,
     pub (crate) modals: HashMap<String, ModalType>
 }
 
@@ -34,7 +33,7 @@ impl BotBuilder {
     }
 
     pub fn register_component(mut self, component: impl Component + 'static) -> Self {
-        self.components.insert(component.id(), Box::new(component));
+        self.components.insert(component.id(), Arc::new(component));
         self
     }
 
@@ -44,7 +43,7 @@ impl BotBuilder {
     }
 
     pub fn register_command(mut self, command: impl Command + 'static) -> Self {
-        self.commands.insert(command.name(), Box::new(command));
+        self.commands.insert(command.name(), Arc::new(command));
         self
     }
 
@@ -58,7 +57,7 @@ impl BotBuilder {
         Fut: Future<Output = BotResult<CommandResponse>> + Send + Sync + 'static,
     {
         let handler = CommandHandler::new(name.into(), description.into(), handler);
-        self.commands.insert(handler.name.clone(), Box::new(handler));
+        self.commands.insert(handler.name.clone(), Arc::new(handler));
         self
     }
 

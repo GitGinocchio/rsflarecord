@@ -1,5 +1,7 @@
-use flarecord::{prelude::*};
+use flarecord::{models::components::{ComponentType, interactive::button::Button, layout::action_row::{ActionRow, IntoActionRow}}, prelude::*};
 use async_trait::async_trait;
+
+use crate::components::mycomponent::MyComponent;
 
 pub struct Hello;
 
@@ -28,8 +30,18 @@ impl Command for Hello {
             Some(user) => format!("Hello {0}, {1} greeted you", user.mention(), author.mention()),
             None => format!("Hello {0}!", author.mention())
         };
+
+        let button = Button::new()
+            .url("https://google.com")
+            .build();
+
+        let action_row = ActionRow::new()
+            .button(button)
+            .build();
         
-        Ok(CommandResponseBuilder::new()
+        Ok(CommandResponse::builder()
+            .component(action_row)
+            .component(MyComponent)
             .content(message)
             .ephemeral()
             .build())

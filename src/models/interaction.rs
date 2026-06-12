@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}};
 use worker::{Env, Response};
 
-use crate::{bot::{Bot, HTTP_CLIENT, state::BotState}, error::{BotResult, Error}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modals::{context::ModalContext, interaction::ModalInteraction}}, services::discord::DiscordService};
+use crate::{bot::{Bot, HTTP_CLIENT, state::BotState}, error::{BotResult, Error}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modals::{context::ModalContext, interaction::ModalInteraction}}, services::discord::DiscordService, traits::component::IntoTwilight};
 
 #[allow(unused)]
 pub (crate) struct Interaction(TwilightInteraction);
@@ -49,7 +49,7 @@ impl Interaction {
         match CommandDispatcher::dispatch(command, command_interaction, ctx).await {
             Err(e) => Ok(e.as_response()?),
             Ok(response) => {
-                let value = serde_json::to_value::<InteractionResponse>(response.into())
+                let value = serde_json::to_value::<InteractionResponse>(response.into_twilight())
                     .map_err(Error::JsonFailed)?;
 
                 Response::from_json(&value).map_err(Error::WorkerError)
@@ -117,7 +117,7 @@ impl Interaction {
         match component.handle(component_interaction, ctx).await {
             Err(e) => Ok(e.as_response()?),
             Ok(response) => {
-                let value = serde_json::to_value::<InteractionResponse>(response.into())
+                let value = serde_json::to_value::<InteractionResponse>(response.into_twilight())
                     .map_err(Error::JsonFailed)?;
 
                 Response::from_json(&value).map_err(Error::WorkerError)

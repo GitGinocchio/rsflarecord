@@ -1,8 +1,9 @@
 use twilight_model::{
     channel::message::{
-            Embed, 
-            MessageFlags
-        }, 
+        Component as TwilightComponent, 
+        Embed, 
+        MessageFlags
+    }, 
     http::{
         attachment::Attachment as TwilightOutgoingAttachment, 
         interaction::{
@@ -13,7 +14,7 @@ use twilight_model::{
     }
 };
 
-use crate::models::attachment::outgoing::Attachment;
+use crate::{bot::Bot, models::{attachment::outgoing::Attachment, command::response::builder::CommandResponseBuilder, components::{Component, ComponentType}}, traits::component::{IntoComponent, IntoTwilight}};
 
 pub mod builder;
 
@@ -21,6 +22,7 @@ pub struct CommandResponse {
     content: Option<String>,
     embeds: Vec<Embed>,
     attachments: Vec<Attachment>,
+    components: Vec<TwilightComponent>,
     ephemeral: bool,
 }
 
@@ -30,8 +32,13 @@ impl CommandResponse {
             content: None,
             embeds: vec![],
             attachments: vec![],
+            components: vec![],
             ephemeral: false
         }
+    }
+
+    pub fn builder() -> CommandResponseBuilder {
+        CommandResponseBuilder::new()
     }
 
     pub fn set_content(&mut self, content: impl Into<String>) {
@@ -46,13 +53,31 @@ impl CommandResponse {
         self.attachments.push(attachment)
     }
 
+    /// Adds a component to the response.
+    ///
+    /// The `component` argument can be any type that implements [`IntoComponent`].
+    /// 
+    /// This includes:
+    /// - **Layout Components**: Any type that can be converted into a [`LayoutComponent`], 
+    ///   specifically: [`ActionRow`], [`Container`], [`Section`], or [`Separator`].
+    /// - **Custom Components**: Any type implementing the [`Component`] trait.
+    pub fn add_component(&mut self, component: impl IntoComponent) {
+        match component.into_component() {
+            ComponentType::Base(component) => self.components.push(component.into_twilight()),
+            ComponentType::Custom(custom) => {
+                let mut components: Vec<TwilightComponent> = custom.build().into_twilight();
+                self.components.append(&mut components);
+            }
+        }
+    }
+
     pub fn set_ephemeral(&mut self, ephemeral: bool) {
         self.ephemeral = ephemeral;
     }
 }
 
-impl Into<InteractionResponse> for CommandResponse {
-    fn into(self) -> InteractionResponse {
+impl IntoTwilight<InteractionResponse> for CommandResponse {
+    fn into_twilight(self) -> InteractionResponse {
         let attachments: Vec<TwilightOutgoingAttachment> = self.attachments
             .into_iter()
             .enumerate()
@@ -69,6 +94,7 @@ impl Into<InteractionResponse> for CommandResponse {
                 flags: if self.ephemeral { Some(MessageFlags::EPHEMERAL) } else { None },
                 embeds: if self.embeds.len() > 0 { Some(self.embeds) } else { None },
                 attachments: if attachments.len() > 0 { Some(attachments) } else { None },
+                components: Some(self.components),
                 ..Default::default()
             })
         }

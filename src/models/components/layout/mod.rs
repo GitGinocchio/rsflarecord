@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::models::components::{layout::{action_row::ActionRow, container::Container, section::Section, separator::Separator}};
+use twilight_model::channel::message::Component as TwilightComponent;
+
+use crate::{models::components::{ComponentType, layout::{action_row::ActionRow, container::Container, section::Section, separator::Separator}}, traits::component::{IntoComponent, IntoTwilight}};
 
 
 pub mod action_row;
@@ -68,5 +70,52 @@ impl From<ActionRow> for LayoutComponent {
 impl From<Separator> for LayoutComponent {
     fn from(value: Separator) -> Self {
         Self::Separator(value)
+    }
+}
+
+impl From<Section> for LayoutComponent {
+    fn from(value: Section) -> Self {
+        Self::Section(value)
+    }
+}
+
+impl IntoComponent for ActionRow {
+    fn into_component(self) -> ComponentType {
+        ComponentType::Base(LayoutComponent::ActionRow(self))
+    }
+}
+
+impl IntoComponent for Container {
+    fn into_component(self) -> ComponentType {
+        ComponentType::Base(LayoutComponent::Container(self))
+    }
+}
+
+impl IntoComponent for Section {
+    fn into_component(self) -> ComponentType {
+        ComponentType::Base(LayoutComponent::Section(self))
+    }
+}
+
+impl IntoComponent for Separator {
+    fn into_component(self) -> ComponentType {
+        ComponentType::Base(LayoutComponent::Separator(self))
+    }
+}
+
+impl IntoTwilight<TwilightComponent> for LayoutComponent {
+    fn into_twilight(self) -> TwilightComponent {
+        match self {
+            Self::ActionRow(action_row) => action_row.into_twilight(),
+            Self::Container(container) => container.into_twilight(),
+            Self::Section(section) => section.into_twilight(),
+            Self::Separator(separator) => separator.into_twilight()
+        }
+    }
+}
+
+impl IntoTwilight<Vec<TwilightComponent>> for RootComponent {
+    fn into_twilight(self) -> Vec<TwilightComponent> {
+        self.0.into_iter().map(|(_id, c)| c.into_twilight()).collect()
     }
 }

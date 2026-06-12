@@ -1,17 +1,22 @@
 use std::marker::PhantomData;
 
-use twilight_model::channel::message::component::Section as TwilightSection;
+use twilight_model::channel::message::{
+    Component as TwilightComponent, 
+    component::Section as TwilightSection
+};
+
+use crate::{models::components::{content::{text_display::TextDisplay, thumbnail::Thumbnail}, interactive::button::Button}, traits::component::IntoTwilight};
 
 
 
 
 pub enum SectionComponent {
-    TextDisplay
+    TextDisplay(TextDisplay)
 }
 
 pub enum SectionAccessory {
-    Button,
-    Thumbnail
+    Button(Button),
+    Thumbnail(Thumbnail)
 }
 
 pub struct Empty;
@@ -112,18 +117,37 @@ impl SectionState<HasComponent, HasAccessory> {
     }
 }
 
-/*
-impl Into<TwilightSection> for Section {
-    fn into(self) -> TwilightSection {
+impl IntoTwilight<TwilightComponent> for SectionAccessory {
+    fn into_twilight(self) -> TwilightComponent {
         match self {
-            Self::Ready(ready) => {
-                TwilightSection {
-                    id: ready.id,
-                    components: Vec::new(),
-                    accessory: Box::new(ready.accessory.expect("Section should be ready").into())
-                }
-            }
+            Self::Button(button) => TwilightComponent::Button(button.into_twilight()),
+            Self::Thumbnail(thumbnail) => TwilightComponent::Thumbnail(thumbnail.into_twilight())
         }
     }
 }
-*/
+
+impl IntoTwilight<TwilightComponent> for SectionComponent {
+    fn into_twilight(self) -> TwilightComponent {
+        match self {
+            Self::TextDisplay(text_display) => TwilightComponent::TextDisplay(text_display.into_twilight())
+        }
+    }
+}
+
+impl IntoTwilight<TwilightSection> for SectionState<HasComponent, HasAccessory> {
+    fn into_twilight(self) -> TwilightSection {
+        TwilightSection {
+            id: self.id,
+            components: self.components.into_iter().map(|c| c.into_twilight()).collect(),
+            accessory: Box::new(self.accessory.expect("Section should be ready").into_twilight())
+        }
+    }
+}
+
+impl IntoTwilight<TwilightComponent> for Section {
+    fn into_twilight(self) -> TwilightComponent {
+        match self {
+            Self::Ready(ready) => TwilightComponent::Section(ready.into_twilight())
+        }
+    }
+}
