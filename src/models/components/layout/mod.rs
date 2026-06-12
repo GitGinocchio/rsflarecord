@@ -15,8 +15,12 @@ impl RootComponent {
         Self(HashMap::new())
     }
 
-    pub (crate) fn calculate_count(&self) -> usize {
+    pub (crate) fn count(&self) -> usize {
         todo!()
+    }
+
+    pub (crate) fn get(&self, id: i32) -> Option<&LayoutComponent> {
+        self.0.get(&id)
     }
 
     pub fn add<C: Into<LayoutComponent>>(&mut self, component: C) {

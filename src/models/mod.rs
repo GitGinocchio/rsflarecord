@@ -14,6 +14,7 @@ mod re_exports {
     pub use twilight_model::util::datetime;
     pub use twilight_model::util::ImageHash;
     pub use twilight_model::channel::{
+        ChannelType,
         ChannelFlags,
         AttachmentFlags
     };
@@ -23,6 +24,8 @@ mod re_exports {
         MemberFlags,
         RoleFlags
     };
+
+    pub use twilight_model::channel::message::component::SelectMenuType;
 
     pub use twilight_model::application::{
         EmojiList,

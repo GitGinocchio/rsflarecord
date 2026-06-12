@@ -1,20 +1,20 @@
 use async_trait::async_trait;
 use flarecord::{
-    models::components::{
-        interactive::button::{
+    models::{ChannelType, SelectMenuType, components::{
+        interactive::{button::{
             Button, 
             ButtonStyle
-        }, 
+        }, select::Select}, 
         layout::{
             action_row::{
                 ActionRow, 
                 IntoActionRow
             }, 
             container::Container, 
-            section::Section, 
+            section::{Section, SectionComponent}, 
             separator::Separator
         }
-    }, 
+    }}, 
     prelude::*
 };
 
@@ -36,9 +36,15 @@ impl Component for MyComponent {
             .label("test")
             .build();
 
-        let section = Section::new();
-        
-        let action_row = ActionRow::new()
+        let select = Select::channel()
+            .on_select(|_int, _ctx| {})
+            .build();
+
+        let select_action_row = ActionRow::new()
+            .select(select)
+            .build();
+
+        let buttons_action_row = ActionRow::new()
             .button(button)
             .build();
 
@@ -46,8 +52,9 @@ impl Component for MyComponent {
             .divider(true)
             .spacing(3);
 
+        root.add(select_action_row);
         root.add(separator);
-        root.add(action_row);
+        root.add(buttons_action_row);
 
         root
     }

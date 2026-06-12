@@ -13,6 +13,8 @@ impl ComponentDispatcher {
             return component.handle(interaction, ctx).await;
         }
 
+        let root = component.build();
+
         Ok(CommandResponse::new())
     }
 }

@@ -29,13 +29,20 @@ pub struct Normal;
 pub struct Link;
 
 pub enum Button {
-    Empty(ButtonKind<Empty>),
     Normal(ButtonKind<Normal>),
     Premium(ButtonKind<Premium>),
     Link(ButtonKind<Link>)
 }
 
 impl Button {
+    pub (crate) fn set_id(&mut self, id: i32) {
+        match self {
+            Button::Link(button) => button.set_id(id),
+            Button::Normal(button) => button.set_id(id),
+            Button::Premium(button) => button.set_id(id),
+        }
+    }
+
     pub fn new() -> ButtonKind<Empty> {
         ButtonKind::new()
     }
@@ -134,6 +141,11 @@ macro_rules! impl_into_button {
     ($(($state:ident, $variant:ident)),* $(,)?) => {
         $(
             impl ButtonKind<$state> {
+                pub fn set_id(&mut self, id: i32) {
+                    self.inner.id = Some(id);
+                    self.inner.custom_id = Some(id.to_string());
+                }
+
                 pub fn build(self) -> Button {
                     Button::$variant(self)
                 }
@@ -151,7 +163,6 @@ macro_rules! impl_into_button {
 impl_common_button_methods!(Normal, Link);
 
 impl_into_button!(
-    (Empty, Empty),
     (Normal, Normal),
     (Premium, Premium),
     (Link, Link),
