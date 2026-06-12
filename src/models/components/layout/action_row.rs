@@ -25,6 +25,15 @@ pub enum ActionRowChild {
     Select(Select)
 }
 
+impl ActionRowChild {
+    pub (crate) fn set_id(&mut self, id: i32) {
+        match self {
+            ActionRowChild::Button(button) => button.set_id(id),
+            ActionRowChild::Select(select) => select.set_id(id)
+        }
+    }
+}
+
 impl ActionRow {
     pub fn new() -> ActionRowState<Empty> {
         ActionRowState { 
@@ -107,6 +116,10 @@ macro_rules! impl_action_row {
             impl SetActionRowId for ActionRowState<$state> {
                 fn set_id(&mut self, id: i32) {
                     self.id = id;
+
+                    for (id, component) in self.components.iter_mut().enumerate() {
+                        component.set_id(id as i32)
+                    }
                 }
             }
 
