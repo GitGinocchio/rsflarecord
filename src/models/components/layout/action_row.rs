@@ -1,11 +1,13 @@
-use std::marker::PhantomData;
+use std::{collections::HashMap, marker::PhantomData};
 
-use twilight_model::channel::message::{
-    Component as TwilightComponent, 
-    component::ActionRow as TwilightActionRow
+use twilight_model::{
+    channel::message::{
+        Component as TwilightComponent, 
+        component::ActionRow as TwilightActionRow
+    }
 };
 
-use crate::{models::components::{interactive::{button::Button, select::Select}, layout::LayoutComponent}, traits::component::IntoTwilight};
+use crate::{models::components::{interactive::{button::Button, select::Select}}, traits::component::IntoTwilight};
 
 pub struct Empty;
 pub struct Has1;
@@ -30,21 +32,25 @@ pub enum ActionRowChild {
     Select(Select)
 }
 
-impl ActionRowChild {
-    pub (crate) fn set_id(&mut self, id: i32) {
-        match self {
-            ActionRowChild::Button(button) => button.set_id(id),
-            ActionRowChild::Select(select) => select.set_id(id)
-        }
-    }
-}
-
+#[allow(unused)]
 impl ActionRow {
     pub fn new() -> ActionRowState<Empty> {
         ActionRowState { 
-            components: Vec::new(), 
+            components: HashMap::new(), 
             _marker: PhantomData,
             id: 0
+        }
+    }
+
+    pub (crate) fn get_children(&self) -> &HashMap<i32, ActionRowChild> {
+        match self {
+            ActionRow::Empty(a) => &a.components,
+            ActionRow::Has1(a) => &a.components,
+            ActionRow::Has2(a) => &a.components,
+            ActionRow::Has3(a) => &a.components,
+            ActionRow::Has4(a) => &a.components,
+            ActionRow::Has5(a) => &a.components,
+            ActionRow::HasSelect(a) => &a.components
         }
     }
 
@@ -62,48 +68,52 @@ impl ActionRow {
 }
 
 pub struct ActionRowState<S> {
-    components: Vec<ActionRowChild>,
+    pub (crate) components: HashMap<i32, ActionRowChild>,
     id: i32,
     _marker: PhantomData<S>,
 }
 
+fn add_button<T, N>(mut ars: ActionRowState<T>, mut b: Button) -> ActionRowState<N> {
+    let id = (ars.components.len() + 1) as i32;
+    b.set_id(format!("{}:{}", ars.id, id));
+    ars.components.insert(id, ActionRowChild::Button(b));
+    ActionRowState { components: ars.components, _marker: PhantomData, id: 0 }
+}
+
 impl ActionRowState<Empty> {
-    pub fn select(mut self, s: Select) -> ActionRowState<HasSelect> {
-        self.components.push(ActionRowChild::Select(s));
+    pub fn select(mut self, mut s: Select) -> ActionRowState<HasSelect> {
+        // NOTE: qui mettiamo sempre l'indice 0 visto che e' possibile avere solo un select!
+        s.set_id(format!("{}:{}", self.id, 0));
+        self.components.insert(0, ActionRowChild::Select(s));
         ActionRowState { components: self.components, _marker: PhantomData, id: 0 }
     }
 
-    pub fn button(mut self, b: Button) -> ActionRowState<Has1> {
-        self.components.push(ActionRowChild::Button(b));
-        ActionRowState { components: self.components, _marker: PhantomData, id: 0 }
+    pub fn button(self, b: Button) -> ActionRowState<Has1> {
+        add_button(self, b)
     }
 }
 
 impl ActionRowState<Has1> {
-    pub fn button(mut self, b: Button) -> ActionRowState<Has2> {
-        self.components.push(ActionRowChild::Button(b));
-        ActionRowState { components: self.components, _marker: PhantomData, id: 0 }
+    pub fn button(self, b: Button) -> ActionRowState<Has2> {
+        add_button(self, b)
     }
 }
 
 impl ActionRowState<Has2> {
-    pub fn button(mut self, b: Button) -> ActionRowState<Has3> {
-        self.components.push(ActionRowChild::Button(b));
-        ActionRowState { components: self.components, _marker: PhantomData, id: 0 }
+    pub fn button(self, b: Button) -> ActionRowState<Has3> {
+        add_button(self, b)
     }
 }
 
 impl ActionRowState<Has3> {
-    pub fn button(mut self, b: Button) -> ActionRowState<Has4> {
-        self.components.push(ActionRowChild::Button(b));
-        ActionRowState { components: self.components, _marker: PhantomData, id: 0 }
+    pub fn button(self, b: Button) -> ActionRowState<Has4> {
+        add_button(self, b)
     }
 }
 
 impl ActionRowState<Has4> {
-    pub fn button(mut self, b: Button) -> ActionRowState<Has5> {
-        self.components.push(ActionRowChild::Button(b));
-        ActionRowState { components: self.components, _marker: PhantomData, id: 0 }
+    pub fn button(self, b: Button) -> ActionRowState<Has5> {
+        add_button(self, b)
     }
 }
 
@@ -121,10 +131,6 @@ macro_rules! impl_action_row {
             impl SetActionRowId for ActionRowState<$state> {
                 fn set_id(&mut self, id: i32) {
                     self.id = id;
-
-                    for (id, component) in self.components.iter_mut().enumerate() {
-                        component.set_id(id as i32)
-                    }
                 }
             }
 
@@ -166,7 +172,7 @@ impl<T> IntoTwilight<TwilightActionRow> for ActionRowState<T> {
     fn into_twilight(self) -> TwilightActionRow {
         TwilightActionRow {
             id: Some(self.id),
-            components: self.components.into_iter().map(|c| c.into_twilight()).collect()
+            components: self.components.into_iter().map(|(_id, c)| c.into_twilight()).collect()
         }
     }
 }

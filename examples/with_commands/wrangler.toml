@@ -1,6 +1,6 @@
 name = "example-with-commands"
 main = "build/index.js"
-compatibility_date = "2026-06-03"
+compatibility_date = "2026-06-13"
 
 [build]
 command = "cargo install -q \"worker-build@^0.8\" && worker-build --release"

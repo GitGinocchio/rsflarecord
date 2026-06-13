@@ -1,4 +1,4 @@
-use flarecord::{models::components::{ComponentType, interactive::button::Button, layout::action_row::{ActionRow, IntoActionRow}}, prelude::*};
+use flarecord::{models::components::{interactive::button::Button, layout::action_row::{ActionRow, IntoActionRow}}, prelude::*};
 use async_trait::async_trait;
 
 use crate::components::mycomponent::MyComponent;

@@ -10,11 +10,21 @@ pub mod container;
 pub mod separator;
 pub mod section;
 
-pub struct RootComponent(HashMap<i32, LayoutComponent>);
+pub struct RootComponent(pub (crate) HashMap<i32, LayoutComponent>);
 
 impl RootComponent {
     pub fn new() -> Self {
         Self(HashMap::new())
+    }
+
+    pub (crate) fn require_components_v2(&self) -> bool {
+        for (_id, comp) in self.0.iter() {
+            if comp.require_components_v2() {
+                return true
+            }
+        }
+
+        false
     }
 
     pub (crate) fn count(&self) -> usize {
@@ -52,6 +62,15 @@ impl LayoutComponent {
             Self::Section(section) => section.set_id(id),
             Self::Separator(separator) => separator.set_id(id)
         };
+    }
+
+    pub (crate) fn require_components_v2(&self) -> bool {
+        match self {
+            Self::ActionRow(_) => false,
+            Self::Container(_) => true,
+            Self::Section(_) => true,
+            Self::Separator(_) => true,
+        }
     }
 }
 

@@ -45,7 +45,7 @@ pub enum Button {
 }
 
 impl Button {
-    pub (crate) fn set_id(&mut self, id: i32) {
+    pub (crate) fn set_id(&mut self, id: String) {
         match self {
             Button::Link(button) => button.set_id(id),
             Button::Normal(button) => button.set_id(id),
@@ -151,9 +151,8 @@ macro_rules! impl_into_button {
     ($(($state:ident, $variant:ident)),* $(,)?) => {
         $(
             impl ButtonKind<$state> {
-                pub fn set_id(&mut self, id: i32) {
-                    self.inner.id = Some(id);
-                    self.inner.custom_id = Some(id.to_string());
+                pub fn set_id(&mut self, id: String) {
+                    self.inner.custom_id = Some(id);
                 }
 
                 pub fn build(self) -> Button {

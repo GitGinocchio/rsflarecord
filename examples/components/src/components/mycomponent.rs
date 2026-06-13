@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use flarecord::{
     models::{ChannelType, SelectMenuType, components::{
-        content::text_display::TextDisplay, interactive::{button::{
+        content::{media_gallery::{MediaGallery, MediaGalleryItem}, text_display::TextDisplay}, interactive::{button::{
             Button, 
             ButtonStyle
         }, select::Select}, layout::{
@@ -10,7 +10,7 @@ use flarecord::{
                 IntoActionRow
             }, 
             container::Container, 
-            section::{Section}, 
+            section::Section, 
             separator::Separator
         }
     }}, 
@@ -47,10 +47,27 @@ impl Component for MyComponent {
             .button(button)
             .build();
 
+        let media_gallery = MediaGallery::new()
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .add_item(MediaGalleryItem::new("https://google.com"))
+            .build();
+
+        let container = Container::new()
+            .add(media_gallery);
+
         let separator = Separator::new()
             .divider(true)
             .spacing(3);
 
+        root.add(container);
         root.add(select_action_row);
         root.add(separator);
         root.add(buttons_action_row);

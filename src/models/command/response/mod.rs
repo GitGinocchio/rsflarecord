@@ -24,6 +24,7 @@ pub struct CommandResponse {
     attachments: Vec<Attachment>,
     components: Vec<TwilightComponent>,
     ephemeral: bool,
+    require_components_v2: bool
 }
 
 impl CommandResponse {
@@ -33,7 +34,8 @@ impl CommandResponse {
             embeds: vec![],
             attachments: vec![],
             components: vec![],
-            ephemeral: false
+            ephemeral: false,
+            require_components_v2: false
         }
     }
 
@@ -63,9 +65,22 @@ impl CommandResponse {
     /// - **Custom Components**: Any type implementing the [`Component`] trait.
     pub fn add_component(&mut self, component: impl IntoComponent) {
         match component.into_component() {
-            ComponentType::Base(component) => self.components.push(component.into_twilight()),
+            ComponentType::Base(component) => {
+                if component.require_components_v2() {
+                    self.require_components_v2 = true;
+                }
+
+                self.components.push(component.into_twilight())
+            },
             ComponentType::Custom(custom) => {
-                let mut components: Vec<TwilightComponent> = custom.build().into_twilight();
+                let built_component = custom.build();
+
+                if built_component.require_components_v2() {
+                    self.require_components_v2 = true;
+                }
+
+                let mut components: Vec<TwilightComponent> = built_component.into_twilight();
+                worker::console_debug!("twilight_component: {components:?}");
                 self.components.append(&mut components);
             }
         }
@@ -87,14 +102,24 @@ impl IntoTwilight<InteractionResponse> for CommandResponse {
             })
             .collect();
 
+        let mut flags = MessageFlags::empty();
+
+        if self.ephemeral {
+            flags = flags.union(MessageFlags::EPHEMERAL);
+        }
+
+        if self.require_components_v2 {
+            flags = flags.union(MessageFlags::IS_COMPONENTS_V2)
+        }
+
         InteractionResponse { 
             kind: InteractionResponseType::ChannelMessageWithSource, 
             data: Some(InteractionResponseData {
                 content: self.content,
-                flags: if self.ephemeral { Some(MessageFlags::EPHEMERAL) } else { None },
+                flags: Some(flags),
                 embeds: if self.embeds.len() > 0 { Some(self.embeds) } else { None },
                 attachments: if attachments.len() > 0 { Some(attachments) } else { None },
-                components: Some(self.components),
+                components: if self.components.len() > 0 { Some(self.components) } else { None },
                 ..Default::default()
             })
         }

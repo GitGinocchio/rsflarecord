@@ -1,4 +1,4 @@
-use crate::{error::BotResult, models::{command::{Command, response::CommandResponse}, components::{Component, CustomComponentType, context::ComponentContext, interaction::ComponentInteraction}}};
+use crate::{error::BotResult, models::{command::{Command, response::CommandResponse}, components::{Component, CustomComponentType, context::ComponentContext, interaction::ComponentInteraction, layout::LayoutComponent}}};
 
 
 pub (crate) struct ComponentDispatcher;
@@ -9,13 +9,12 @@ impl ComponentDispatcher {
         interaction: ComponentInteraction, 
         ctx: ComponentContext
     ) -> BotResult<CommandResponse> {
+        worker::console_debug!("component_id received: {}", interaction.data.custom_id);
         if component.id() == interaction.data.custom_id {
             return component.handle(interaction, ctx).await;
         }
 
-        let root = component.build();
-
-        
+        let _root = component.build();
 
         Ok(CommandResponse::new())
     }

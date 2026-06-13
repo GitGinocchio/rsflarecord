@@ -1,5 +1,7 @@
-use flarecord::{prelude::*};
+use flarecord::{models::components::{interactive::button::{Button, ButtonStyle}, layout::action_row::{ActionRow, IntoActionRow}}, prelude::*};
 use async_trait::async_trait;
+
+use crate::components::mycomponent::MyComponent;
 
 pub struct Hello;
 
@@ -30,6 +32,7 @@ impl Command for Hello {
         };
         
         Ok(CommandResponseBuilder::new()
+            .component(MyComponent)
             .content(message)
             .ephemeral()
             .build())

@@ -5,12 +5,13 @@ use twilight_model::channel::message::{
     component::Container as TwilightContainer
 };
 
-use crate::{models::{color::Color, components::layout::{action_row::ActionRow, section::Section, separator::Separator}}, traits::component::IntoTwilight};
+use crate::{models::{color::Color, components::{content::media_gallery::MediaGallery, layout::{action_row::ActionRow, section::Section, separator::Separator}}}, traits::component::IntoTwilight};
 
 pub enum ContainerChild {
     ActionRow(ActionRow),
     Section(Section),
-    Separator(Separator)
+    Separator(Separator),
+    MediaGallery(MediaGallery)
 }
 
 impl ContainerChild {
@@ -18,7 +19,8 @@ impl ContainerChild {
         match self {
             Self::ActionRow(action_row) => action_row.set_id(id),
             Self::Section(section) => section.set_id(id),
-            Self::Separator(separator) => separator.set_id(id)
+            Self::Separator(separator) => separator.set_id(id),
+            Self::MediaGallery(mg) => mg.set_id(id)
         }
     }
 }
@@ -38,6 +40,12 @@ impl From<ActionRow> for ContainerChild {
 impl From<Separator> for ContainerChild {
     fn from(value: Separator) -> Self {
         Self::Separator(value)
+    }
+}
+
+impl From<MediaGallery> for ContainerChild {
+    fn from(value: MediaGallery) -> Self {
+        Self::MediaGallery(value)
     }
 }
 
@@ -67,13 +75,13 @@ impl Container {
         self
     }
 
-    pub fn add(mut self, mut child: ContainerChild) -> Self {
-        let current_size = self.children.len();
+    pub fn add(mut self, child: impl Into<ContainerChild>) -> Self {
+        let id = (self.children.len()+1) as i32;
 
-        let new_id = (current_size+1) as i32;
-        child.set_id(new_id);
+        let mut child = child.into();
+        child.set_id(id);
 
-        self.children.insert(new_id, child);
+        self.children.insert(id, child);
         self
     }
 }
@@ -83,7 +91,8 @@ impl IntoTwilight<TwilightComponent> for ContainerChild {
         match self {
             Self::ActionRow(action_row) => action_row.into_twilight(),
             Self::Section(section) => section.into_twilight(),
-            Self::Separator(separator) => separator.into_twilight()
+            Self::Separator(separator) => separator.into_twilight(),
+            Self::MediaGallery(media_gallery) => media_gallery.into_twilight()
         }
     }
 }

@@ -34,7 +34,7 @@ pub enum Select {
 }
 
 impl Select {
-    pub (crate) fn set_id(&mut self, id: i32) {
+    pub (crate) fn set_id(&mut self, id: String) {
         match self {
             Select::Channel(select) => select.set_id(id),
             Select::String(select) => select.set_id(id),
@@ -75,7 +75,7 @@ impl Select {
                 kind: kind,
                 max_values: None,
                 min_values: None,
-                options: None,
+                options: Some(vec![]),
                 placeholder: None,
                 required: None
             },
@@ -133,9 +133,8 @@ impl<T> SelectKind<T> {
 }
 
 impl<T> SelectKind<T> {
-    pub (crate) fn set_id(&mut self, id: i32) {
-        self.inner.id = Some(id);
-        self.inner.custom_id = id.to_string()
+    pub (crate) fn set_id(&mut self, id: String) {
+        self.inner.custom_id = id;
     }
 }
 

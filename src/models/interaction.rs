@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use twilight_model::{application::interaction::{Interaction as TwilightInteraction, InteractionType}, http::interaction::{InteractionResponse, InteractionResponseType}};
 use worker::{Env, Response};
 
-use crate::{bot::{Bot, HTTP_CLIENT, state::BotState}, error::{BotResult, Error}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, interaction::ComponentInteraction}, modals::{context::ModalContext, interaction::ModalInteraction}}, services::discord::DiscordService, traits::component::IntoTwilight};
+use crate::{bot::{Bot, HTTP_CLIENT, state::BotState}, error::{BotResult, Error}, models::{autocomplete::{context::AutocompleteContext, dispatcher::AutocompleteDispatcher, interaction::AutocompleteInteraction}, command::{context::CommandContext, dispatcher::CommandDispatcher, interaction::CommandInteraction}, components::{context::ComponentContext, dispatcher::ComponentDispatcher, interaction::ComponentInteraction}, modals::{context::ModalContext, interaction::ModalInteraction}}, services::discord::DiscordService, traits::component::IntoTwilight};
 
 #[allow(unused)]
 pub (crate) struct Interaction(TwilightInteraction);
@@ -51,6 +51,8 @@ impl Interaction {
             Ok(response) => {
                 let value = serde_json::to_value::<InteractionResponse>(response.into_twilight())
                     .map_err(Error::JsonFailed)?;
+
+                worker::console_debug!("command_response: {value:?}");
 
                 Response::from_json(&value).map_err(Error::WorkerError)
             }
@@ -114,7 +116,7 @@ impl Interaction {
         let discord_service = DiscordService::get_or_init(http_client.clone());
         let ctx = ComponentContext::new(bot.clone(), env, discord_service);
 
-        match component.handle(component_interaction, ctx).await {
+        match ComponentDispatcher::dispatch(component, component_interaction, ctx).await {
             Err(e) => Ok(e.as_response()?),
             Ok(response) => {
                 let value = serde_json::to_value::<InteractionResponse>(response.into_twilight())
