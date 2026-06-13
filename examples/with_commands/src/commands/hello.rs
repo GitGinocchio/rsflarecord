@@ -1,4 +1,4 @@
-use flarecord::{models::components::{interactive::button::{Button, ButtonStyle}, layout::action_row::{ActionRow, IntoActionRow}}, prelude::*};
+use flarecord::{models::{SelectMenuType, components::{interactive::{button::{Button, ButtonStyle}, select::Select}, layout::action_row::{ActionRow, IntoActionRow}}}, prelude::*};
 use async_trait::async_trait;
 
 use crate::components::mycomponent::MyComponent;
@@ -30,8 +30,17 @@ impl Command for Hello {
             Some(user) => format!("Hello {0}, {1} greeted you", user.mention(), author.mention()),
             None => format!("Hello {0}!", author.mention())
         };
+
+        let select = Select::role()
+            .placeholder("Ciaooo")
+            .build();
+
+        let action_row = ActionRow::new()
+            .select(select)
+            .build();
         
         Ok(CommandResponseBuilder::new()
+            .component(action_row)
             .component(MyComponent)
             .content(message)
             .ephemeral()

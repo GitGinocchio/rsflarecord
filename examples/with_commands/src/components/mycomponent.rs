@@ -50,6 +50,29 @@ impl Component for MyComponent {
             .button(next_button)
             .build();
 
+        /*
+        let text_display = TextDisplay::new()
+            .heading(1, "Ciaooo");
+
+        let button = Button::new()
+            .url("https://google.com")
+            .build();
+
+        let section = Section::new()
+            .component(text_display)
+            .accessory(button)
+            .build();
+        root.add(section);
+        */
+
+        let select = Select::user()
+            .build();
+
+        let action_row2 = ActionRow::new()
+            .select(select)
+            .build();
+
+        root.add(action_row2);
         root.add(action_row);
 
         root

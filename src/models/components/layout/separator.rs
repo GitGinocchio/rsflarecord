@@ -20,7 +20,7 @@ impl Separator {
         })
     }
 
-    pub (crate) fn set_id(&mut self, id: i32) {
+    pub (crate) fn set_id(&mut self, _component_id: &str, id: i32) {
         self.0.id = Some(id);
     }
 

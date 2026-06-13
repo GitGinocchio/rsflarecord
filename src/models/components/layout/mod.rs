@@ -35,14 +35,17 @@ impl RootComponent {
         self.0.get(&id)
     }
 
+    pub (crate) fn set_id(&mut self, component_id: String) {
+        for (id, comp) in &mut self.0 {
+            comp.set_id(&component_id, *id);
+        }
+    }
+
     pub fn add<C: Into<LayoutComponent>>(&mut self, component: C) {
         let current_size = self.0.len();
-
         let new_id = (current_size+1) as i32;
 
-        let mut component = component.into();
-        component.set_id(new_id);
-
+        let component = component.into();
         self.0.insert(new_id, component);
     }
 }
@@ -55,12 +58,12 @@ pub enum LayoutComponent {
 }
 
 impl LayoutComponent {
-    pub (crate) fn set_id(&mut self, id: i32) {
+    pub (crate) fn set_id(&mut self, component_id: &str, id: i32) {
         match self {
-            Self::ActionRow(action_row) => action_row.set_id(id),
-            Self::Container(container) => container.set_id(id),
-            Self::Section(section) => section.set_id(id),
-            Self::Separator(separator) => separator.set_id(id)
+            Self::ActionRow(action_row) => action_row.set_id(component_id, id),
+            Self::Container(container) => container.set_id(component_id, id),
+            Self::Section(section) => section.set_id(component_id, id),
+            Self::Separator(separator) => separator.set_id(component_id, id)
         };
     }
 
@@ -135,6 +138,11 @@ impl IntoTwilight<TwilightComponent> for LayoutComponent {
 
 impl IntoTwilight<Vec<TwilightComponent>> for RootComponent {
     fn into_twilight(self) -> Vec<TwilightComponent> {
-        self.0.into_iter().map(|(_id, c)| c.into_twilight()).collect()
+        let mut components: Vec<_> = self.0.into_iter().collect();
+        components.sort_by_key(|(id, _c)| *id);
+
+        components.into_iter()
+            .map(|(_id, c)| c.into_twilight())
+            .collect()
     }
 }

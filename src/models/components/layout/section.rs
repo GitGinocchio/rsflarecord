@@ -19,6 +19,12 @@ impl SectionComponent {
     }
 }
 
+impl From<TextDisplay> for SectionComponent {
+    fn from(value: TextDisplay) -> Self {
+        Self::TextDisplay(value)
+    }
+}
+
 pub enum SectionAccessory {
     Button(Button),
     Thumbnail(Thumbnail)
@@ -30,6 +36,18 @@ impl SectionAccessory {
             SectionAccessory::Button(button) => button.set_id(id.to_string()),
             SectionAccessory::Thumbnail(thumbnail) => thumbnail.set_id(id)
         }
+    }
+}
+
+impl From<Button> for SectionAccessory {
+    fn from(value: Button) -> Self {
+        Self::Button(value)
+    }
+}
+
+impl From<Thumbnail> for SectionAccessory {
+    fn from(value: Thumbnail) -> Self {
+        Self::Thumbnail(value)
     }
 }
 
@@ -47,9 +65,15 @@ impl Section {
         SectionState::new()
     }
 
-    pub (crate) fn set_id(&mut self, id: i32) {
+    pub (crate) fn set_id(&mut self, _component_id: &str, id: i32) {
         match self {
-            Self::Ready(state) => state.id = Some(id)
+            Self::Ready(state) => {
+                state.id = Some(id);
+
+                for (id, comp) in &mut state.components {
+                    comp.set_id(*id);
+                }
+            }
         }
     }
 }
@@ -72,8 +96,9 @@ impl SectionState<Empty, Empty> {
         }
     }
 
-    pub fn accessory(self, mut accessory: SectionAccessory) -> SectionState<Empty, HasAccessory> {
+    pub fn accessory(self, accessory: impl Into<SectionAccessory>) -> SectionState<Empty, HasAccessory> {
         // NOTE: sempre 0 perche' e' uno solo!
+        let mut accessory = accessory.into();
         accessory.set_id(0);
         SectionState {
             id: self.id,
@@ -83,28 +108,27 @@ impl SectionState<Empty, Empty> {
         }
     }
 
-    pub fn component(self, component: SectionComponent) -> SectionState<HasComponent, Empty> {
-        add_component(self, component)
+    pub fn component(self, component: impl Into<SectionComponent>) -> SectionState<HasComponent, Empty> {
+        add_component(self, component.into())
     }
 }
 
-fn add_component<A, B, C, D>(mut state: SectionState<A, B>, mut component: SectionComponent) -> SectionState<C, D> {
+fn add_component<A, B, C, D>(mut state: SectionState<A, B>, component: SectionComponent) -> SectionState<C, D> {
     let id = (state.components.len() + 1) as i32;
-    component.set_id(id);
     state.components.insert(id, component);
     SectionState { id: state.id, components: state.components, accessory: None, _marker: PhantomData }
 }
 
 impl SectionState<HasComponent, Empty> {
-    pub fn component(self, component: SectionComponent) -> SectionState<HasComponent, Empty> {
-        add_component(self, component)
+    pub fn component(self, component: impl Into<SectionComponent>) -> SectionState<HasComponent, Empty> {
+        add_component(self, component.into())
     }
     
-    pub fn accessory(self, accessory: SectionAccessory) -> SectionState<HasComponent, HasAccessory> {
+    pub fn accessory(self, accessory: impl Into<SectionAccessory>) -> SectionState<HasComponent, HasAccessory> {
         SectionState {
             id: self.id,
             components: self.components,
-            accessory: Some(accessory),
+            accessory: Some(accessory.into()),
             _marker: PhantomData
         }
     }
@@ -141,10 +165,16 @@ impl IntoTwilight<TwilightComponent> for SectionComponent {
 
 impl IntoTwilight<TwilightSection> for SectionState<HasComponent, HasAccessory> {
     fn into_twilight(self) -> TwilightSection {
+        let mut components: Vec<_> = self.components.into_iter().collect();
+        components.sort_by_key(|(id, _c)| *id);
+
         TwilightSection {
             id: self.id,
-            components: self.components.into_iter().map(|(_id, c)| c.into_twilight()).collect(),
-            accessory: Box::new(self.accessory.expect("Section should be ready").into_twilight())
+            accessory: Box::new(self.accessory.expect("Section should be ready").into_twilight()),
+            components: components
+                .into_iter()
+                .map(|(_id, c)| c.into_twilight())
+                .collect()
         }
     }
 }

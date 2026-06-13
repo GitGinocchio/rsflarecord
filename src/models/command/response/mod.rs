@@ -73,7 +73,8 @@ impl CommandResponse {
                 self.components.push(component.into_twilight())
             },
             ComponentType::Custom(custom) => {
-                let built_component = custom.build();
+                let mut built_component = custom.build();
+                built_component.set_id(custom.id());
 
                 if built_component.require_components_v2() {
                     self.require_components_v2 = true;

@@ -15,11 +15,11 @@ pub enum ContainerChild {
 }
 
 impl ContainerChild {
-    pub (crate) fn set_id(&mut self, id: i32) {
+    pub (crate) fn set_id(&mut self,component_id: &str, id: i32) {
         match self {
-            Self::ActionRow(action_row) => action_row.set_id(id),
-            Self::Section(section) => section.set_id(id),
-            Self::Separator(separator) => separator.set_id(id),
+            Self::ActionRow(action_row) => action_row.set_id(component_id, id),
+            Self::Section(section) => section.set_id(component_id, id),
+            Self::Separator(separator) => separator.set_id(component_id, id),
             Self::MediaGallery(mg) => mg.set_id(id)
         }
     }
@@ -66,8 +66,12 @@ impl Container {
         }
     }
 
-    pub (crate) fn set_id(&mut self, id: i32) {
+    pub (crate) fn set_id(&mut self, component_id: &str, id: i32) {
         self.id = id;
+
+        for (id, child) in &mut self.children {
+            child.set_id(component_id, *id);
+        }
     }
 
     pub fn accent_color(mut self, color: Color) -> Self {
@@ -77,9 +81,7 @@ impl Container {
 
     pub fn add(mut self, child: impl Into<ContainerChild>) -> Self {
         let id = (self.children.len()+1) as i32;
-
-        let mut child = child.into();
-        child.set_id(id);
+        let child = child.into();
 
         self.children.insert(id, child);
         self
@@ -99,11 +101,17 @@ impl IntoTwilight<TwilightComponent> for ContainerChild {
 
 impl IntoTwilight<TwilightContainer> for Container {
     fn into_twilight(self) -> TwilightContainer {
+        let mut children: Vec<_> = self.children.into_iter().collect();
+        children.sort_by_key(|(id, _c)| *id);
+
         TwilightContainer {
             id: Some(self.id),
             spoiler: self.spoiler,
             accent_color: Some(self.accent_color.map(|v| v.into())),
-            components: self.children.into_iter().map(|(_id, c)| c.into_twilight()).collect()
+            components: children
+                .into_iter()
+                .map(|(_id, c)| c.into_twilight())
+                .collect()
         }
     }
 }
